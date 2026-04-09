@@ -1,0 +1,2960 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WMS仓库管理系统 V5.1</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        
+        .login-page { padding: 20px; height: 100vh; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .login-box { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 400px; margin: 0 auto; width: 100%; }
+        .login-title { text-align: center; font-size: 26px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .login-subtitle { text-align: center; color: #999; font-size: 14px; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; color: #666; font-size: 14px; }
+        .input-group input, .input-group select { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; }
+        .input-group input:focus, .input-group select:focus { border-color: #667eea; outline: none; }
+        .btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-success { background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%); }
+        .btn-warning { background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%); }
+        .btn-danger { background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%); }
+        .btn-small { padding: 10px 16px; font-size: 14px; width: auto; }
+        
+        .home-page { display: none; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .header h1 { font-size: 18px; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-btn { background: rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 6px; color: white; text-decoration: none; font-size: 13px; cursor: pointer; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .user-role { background: rgba(255,255,255,0.3); padding: 3px 8px; border-radius: 20px; font-size: 11px; }
+        
+        .warehouse-selector { background: rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 6px; }
+        .warehouse-selector select { background: transparent; color: white; border: none; font-size: 13px; cursor: pointer; }
+        .warehouse-selector select option { color: #333; }
+        
+        .alert-banner { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .alert-count { background: white; color: #ff6b6b; padding: 2px 10px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .stat-card { background: white; border-radius: 12px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .stat-card.warning { border-left: 4px solid #ff6b6b; }
+        .stat-card.success { border-left: 4px solid #52c41a; }
+        .stat-icon { font-size: 24px; margin-bottom: 6px; }
+        .stat-num { font-size: 24px; font-weight: bold; color: #333; }
+        .stat-label { font-size: 12px; color: #999; margin-top: 4px; }
+        
+        .quick-actions { padding: 0 15px 15px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 12px; padding-left: 5px; }
+        .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .action-item { background: white; border-radius: 14px; padding: 20px 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.2s; }
+        .action-item:active { transform: scale(0.95); background: #f0f0f0; }
+        .action-icon { font-size: 32px; margin-bottom: 8px; }
+        .action-text { font-size: 16px; font-weight: 600; color: #333; }
+        .action-desc { font-size: 12px; color: #999; margin-top: 4px; }
+        
+        .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 15px 20px; }
+        .module-item { background: white; border-radius: 12px; padding: 15px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .module-item:active { background: #f5f5f5; }
+        .module-icon { font-size: 22px; }
+        .module-text { font-size: 13px; color: #666; margin-top: 5px; }
+        
+        .list-page { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f5f5; z-index: 100; overflow-y: auto; }
+        .list-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .list-header h2 { font-size: 16px; }
+        .back-btn { color: white; text-decoration: none; font-size: 14px; padding: 5px 10px; background: rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; }
+        .list-content { padding: 15px; padding-bottom: 100px; }
+        .list-item { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .list-item:active { background: #f5f5f5; }
+        .list-item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+        .list-item-row:last-child { border-bottom: none; }
+        .list-item-label { color: #999; font-size: 13px; }
+        .list-item-value { color: #333; font-size: 14px; font-weight: 500; }
+        .list-item-value.success { color: #52c41a; }
+        .list-item-value.warning { color: #faad14; }
+        .list-item-value.danger { color: #ff4d4f; }
+        
+        .form-page { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f5f5; z-index: 100; overflow-y: auto; }
+        .form-content { padding: 15px; padding-bottom: 100px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #666; font-size: 14px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #667eea; outline: none; }
+        .form-group textarea { min-height: 80px; resize: none; }
+        .form-footer { padding: 20px; display: flex; gap: 10px; }
+        .form-footer .btn { flex: 1; }
+        
+        .empty { text-align: center; padding: 60px 20px; color: #999; }
+        .empty-icon { font-size: 48px; margin-bottom: 15px; }
+        
+        .scan-btn { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%); color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(82,196,26,0.4); cursor: pointer; z-index: 50; }
+        .scan-btn:active { transform: scale(0.95); }
+        
+        .barcode-container { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; text-align: center; }
+        .barcode-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .barcode-value { font-size: 14px; color: #666; margin-bottom: 15px; }
+        
+        .mobile-step { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+        .step-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .step-content { font-size: 16px; margin-bottom: 20px; }
+        .step-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .step-buttons .btn { flex: 1; min-width: 120px; }
+        
+        .search-box { padding: 15px; background: white; border-radius: 12px; margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; }
+        .search-input:focus { border-color: #667eea; outline: none; }
+        
+        .filter-tabs { display: flex; gap: 10px; padding: 0 15px 15px; overflow-x: auto; }
+        .filter-tab { padding: 8px 16px; background: white; border-radius: 20px; font-size: 14px; color: #666; white-space: nowrap; cursor: pointer; }
+        .filter-tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; padding-bottom: 20px; }
+        .page-btn { padding: 8px 12px; background: white; border-radius: 6px; cursor: pointer; color: #666; }
+        .page-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: bold; }
+        .modal-close { font-size: 24px; cursor: pointer; line-height: 1; }
+        
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; z-index: 300; display: none; }
+        .toast.show { display: block; }
+        .toast.success { background: #52c41a; }
+        .toast.error { background: #ff4d4f; }
+        
+        .loading { text-align: center; padding: 40px; }
+        .loading-spinner { width: 40px; height: 40px; border: 4px solid #667eea; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @media (min-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .action-grid { grid-template-columns: repeat(4, 1fr); }
+            .module-grid { grid-template-columns: repeat(6, 1fr); }
+            .header h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录�?-->
+    <div class="login-page" id="loginPage">
+        <div class="login-box">
+            <div class="login-title">WMS仓库管理系统</div>
+            <div class="login-subtitle">V5.1 完整�?/div>
+            <div class="input-group">
+                <label>用户�?/label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="input-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密�?>
+            </div>
+            <div class="input-group">
+                <label>角色</label>
+                <select id="role">
+                    <option value="operator">操作�?/option>
+                    <option value="manager">管理�?/option>
+                    <option value="admin" selected>超级管理�?/option>
+                </select>
+            </div>
+            <button class="btn" id="loginBtn">登录</button>
+        </div>
+    </div>
+
+    <!-- 首页 -->
+    <div class="home-page" id="homePage">
+        <div class="header">
+            <h1>WMS仓库管理系统</h1>
+            <div class="header-right">
+                <div class="warehouse-selector">
+                    <select id="warehouseSelect">
+                        <option value="warehouse1">仓库A</option>
+                        <option value="warehouse2">仓库B</option>
+                        <option value="warehouse3">仓库C</option>
+                    </select>
+                </div>
+                <div class="user-info">
+                    <span id="currentUser">hwq90</span>
+                    <span class="user-role" id="currentRole">超级管理�?/span>
+                </div>
+                <div class="header-btn" id="logoutBtn">退�?/div>
+            </div>
+        </div>
+        
+        <div class="alert-banner" id="alertBanner" style="display: none;">
+            <span>⚠️ 库存预警�?span id="alertCount">0</span>个物料需要处�?/span>
+            <span class="alert-count" id="alertCountBadge">0</span>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card" id="statMaterial">
+                <div class="stat-icon">📦</div>
+                <div class="stat-num" id="materialCount">0</div>
+                <div class="stat-label">物料总数</div>
+            </div>
+            <div class="stat-card" id="statStock">
+                <div class="stat-icon">📊</div>
+                <div class="stat-num" id="stockCount">0</div>
+                <div class="stat-label">库存总数</div>
+            </div>
+            <div class="stat-card" id="statOrder">
+                <div class="stat-icon">📋</div>
+                <div class="stat-num" id="orderCount">0</div>
+                <div class="stat-label">订单总数</div>
+            </div>
+            <div class="stat-card warning" id="statWarning">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-num" id="warningCount">0</div>
+                <div class="stat-label">库存预警</div>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <div class="section-title">快速操�?/div>
+            <div class="action-grid">
+                <div class="action-item" id="quickScan">
+                    <div class="action-icon">📱</div>
+                    <div class="action-text">扫码入库</div>
+                    <div class="action-desc">扫描条形码快速入�?/div>
+                </div>
+                <div class="action-item" id="quickOut">
+                    <div class="action-icon">📤</div>
+                    <div class="action-text">扫码出库</div>
+                    <div class="action-desc">扫描条形码快速出�?/div>
+                </div>
+                <div class="action-item" id="quickTransfer">
+                    <div class="action-icon">↔️</div>
+                    <div class="action-text">库位转移</div>
+                    <div class="action-desc">扫码转移物料位置</div>
+                </div>
+                <div class="action-item" id="quickPick">
+                    <div class="action-icon">🚚</div>
+                    <div class="action-text">智能拣货</div>
+                    <div class="action-desc">开始拣货任�?/div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <div class="section-title">功能模块</div>
+            <div class="module-grid">
+                <div class="module-item" id="moduleMaterial">
+                    <div class="module-icon">📦</div>
+                    <div class="module-text">物料管理</div>
+                </div>
+                <div class="module-item" id="moduleStock">
+                    <div class="module-icon">📊</div>
+                    <div class="module-text">库存管理</div>
+                </div>
+                <div class="module-item" id="moduleOrder">
+                    <div class="module-icon">📋</div>
+                    <div class="module-text">订单管理</div>
+                </div>
+                <div class="module-item" id="modulePick">
+                    <div class="module-icon">🚚</div>
+                    <div class="module-text">智能拣货</div>
+                </div>
+                <div class="module-item" id="moduleBarcode">
+                    <div class="module-icon">📱</div>
+                    <div class="module-text">条形�?/div>
+                </div>
+                <div class="module-item" id="moduleWarehouse">
+                    <div class="module-icon">🏭</div>
+                    <div class="module-text">仓库管理</div>
+                </div>
+                <div class="module-item" id="moduleLocation">
+                    <div class="module-icon">📍</div>
+                    <div class="module-text">库位管理</div>
+                </div>
+                <div class="module-item" id="moduleUser">
+                    <div class="module-icon">👥</div>
+                    <div class="module-text">用户管理</div>
+                </div>
+                <div class="module-item" id="moduleReport">
+                    <div class="module-icon">📈</div>
+                    <div class="module-text">报表统计</div>
+                </div>
+                <div class="module-item" id="moduleSupplier">
+                    <div class="module-icon">🏢</div>
+                    <div class="module-text">供应�?/div>
+                </div>
+                <div class="module-item" id="moduleInventory">
+                    <div class="module-icon">📋</div>
+                    <div class="module-text">盘点</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 物料列表�?-->
+    <div class="list-page" id="materialListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>物料管理</h2>
+            <span class="header-btn" id="addMaterialBtn">+ 添加</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportMaterialTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('materialImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportMaterialList()" style="flex:1;">📤导出</button>
+            <input type="file" id="materialImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importMaterialList(this)">
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="materialSearch" placeholder="搜索物料编码/名称...">
+        </div>
+        <div class="filter-tabs" id="materialFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="low">低库�?/div>
+            <div class="filter-tab" data-filter="normal">正常</div>
+        </div>
+        <div class="list-content" id="materialList"></div>
+        <div class="pagination" id="materialPagination"></div>
+        <div class="scan-btn" id="scanMaterialBtn">📷</div>
+    </div>
+
+    <!-- 物料表单�?-->
+    <div class="form-page" id="materialFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('materialListPage')">�?返回</span>
+            <h2 id="materialFormTitle">添加物料</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>物料编码 *</label>
+                <input type="text" id="materialCode" placeholder="请输入物料编�?>
+            </div>
+            <div class="form-group">
+                <label>物料名称 *</label>
+                <input type="text" id="materialName" placeholder="请输入物料名�?>
+            </div>
+            <div class="form-group">
+                <label>规格型号</label>
+                <input type="text" id="materialSpec" placeholder="请输入规格型�?>
+            </div>
+            <div class="form-group">
+                <label>单位</label>
+                <input type="text" id="materialUnit" placeholder="请输入单�?>
+            </div>
+            <div class="form-group">
+                <label>单价</label>
+                <input type="number" id="materialPrice" placeholder="请输入单�? step="0.01">
+            </div>
+            <div class="form-group">
+                <label>类别</label>
+                <input type="text" id="materialCategory" placeholder="请输入类�?>
+            </div>
+            <div class="form-group">
+                <label>安全库存</label>
+                <input type="number" id="materialSafetyStock" placeholder="最低库存量" value="10">
+            </div>
+            <div class="form-group">
+                <label>最高库�?/label>
+                <input type="number" id="materialMaxStock" placeholder="最高库存量" value="1000">
+            </div>
+            <div class="form-group">
+                <label>条形�?/label>
+                <input type="text" id="materialBarcode" placeholder="留空自动生成">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="materialRemark" placeholder="请输入备�?></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveMaterialBtn">保存</button>
+            <button class="btn btn-danger" id="deleteMaterialBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 库存列表�?-->
+    <div class="list-page" id="stockListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>库存管理</h2>
+            <span class="header-btn" id="stockInBtn">入库</span>
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="stockSearch" placeholder="搜索物料编码/名称...">
+        </div>
+        <div class="filter-tabs" id="stockFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="low">低库�?/div>
+            <div class="filter-tab" data-filter="warning">预警</div>
+        </div>
+        <div class="list-content" id="stockList"></div>
+        <div class="pagination" id="stockPagination"></div>
+        <div class="scan-btn" id="scanStockBtn">📷</div>
+    </div>
+
+    <!-- 入库表单�?-->
+    <div class="form-page" id="stockInPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('stockListPage')">�?返回</span>
+            <h2>入库操作</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>物料编码 *</label>
+                <input type="text" id="stockInCode" placeholder="请输入或扫描物料编码">
+            </div>
+            <div class="form-group">
+                <label>物料名称</label>
+                <input type="text" id="stockInName" readonly style="background:#f5f5f5;">
+            </div>
+            <div class="form-group">
+                <label>入库数量 *</label>
+                <input type="number" id="stockInQty" placeholder="请输入数�? min="1">
+            </div>
+            <div class="form-group">
+                <label>供应�?/label>
+                <select id="stockInSupplier">
+                    <option value="">请选择供应商（可选）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>库位</label>
+                <input type="text" id="stockInLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
+                <select id="stockInLocation">
+                    <option value="">请选择库位</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>入库类型</label>
+                <select id="stockInType">
+                    <option value="purchase">采购入库</option>
+                    <option value="return">退货入�?/option>
+                    <option value="production">生产入库</option>
+                    <option value="transfer">调拨入库</option>
+                    <option value="other">其他入库</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>批次�?/label>
+                <input type="text" id="stockInBatch" placeholder="留空自动生成">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="stockInRemark" placeholder="请输入备�?></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="confirmStockInBtn">确认入库</button>
+        </div>
+    </div>
+
+    <!-- 出库表单�?-->
+    <div class="form-page" id="stockOutPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('stockListPage')">�?返回</span>
+            <h2>出库操作</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>物料编码 *</label>
+                <input type="text" id="stockOutCode" placeholder="请输入或扫描物料编码">
+            </div>
+            <div class="form-group">
+                <label>物料名称</label>
+                <input type="text" id="stockOutName" readonly style="background:#f5f5f5;">
+            </div>
+            <div class="form-group">
+                <label>当前库存</label>
+                <input type="text" id="stockOutCurrent" readonly style="background:#f5f5f5;">
+            </div>
+            <div class="form-group">
+                <label>出库数量 *</label>
+                <input type="number" id="stockOutQty" placeholder="请输入数�? min="1">
+            </div>
+            <div class="form-group">
+                <label>供应商（退货时选择�?/label>
+                <select id="stockOutSupplier">
+                    <option value="">请选择供应商（可选）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>库位</label>
+                <input type="text" id="stockOutLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
+                <select id="stockOutLocation">
+                    <option value="">请选择库位</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>出库类型</label>
+                <select id="stockOutType">
+                    <option value="sale">销售出�?/option>
+                    <option value="return">退货出�?/option>
+                    <option value="production">生产领用</option>
+                    <option value="transfer">调拨出库</option>
+                    <option value="other">其他出库</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="stockOutRemark" placeholder="请输入备�?></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-warning" id="confirmStockOutBtn">确认出库</button>
+        </div>
+    </div>
+
+    <!-- 库位转移�?-->
+    <div class="form-page" id="transferPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>库位转移</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="mobile-step">
+                <div class="step-title">步骤1: 选择物料</div>
+                <div class="form-group">
+                    <label>物料编码</label>
+                    <input type="text" id="transferMaterialCode" placeholder="请输入或扫描物料编码">
+                </div>
+                <div class="form-group">
+                    <label>物料名称</label>
+                    <input type="text" id="transferMaterialName" readonly style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>供应�?/label>
+                    <select id="transferSupplier">
+                        <option value="">请选择供应商（可选）</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mobile-step">
+                <div class="step-title">步骤2: 选择库位</div>
+                <div class="form-group">
+                    <label>原库�?/label>
+                    <input type="text" id="transferFromLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
+                    <select id="transferFromLocation">
+                        <option value="">请选择原库�?/option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>目标库位</label>
+                    <input type="text" id="transferToLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
+                    <select id="transferToLocation">
+                        <option value="">请选择目标库位</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mobile-step">
+                <div class="step-title">步骤3: 输入数量</div>
+                <div class="form-group">
+                    <label>转移数量</label>
+                    <input type="number" id="transferQty" placeholder="请输入转移数�? min="1">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="transferRemark" placeholder="请输入备�?></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="confirmTransferBtn">确认转移</button>
+        </div>
+    </div>
+
+    <!-- 订单列表�?-->
+    <div class="list-page" id="orderListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>订单管理</h2>
+            <span class="header-btn" id="addOrderBtn">+ 新建</span>
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="orderSearch" placeholder="搜索订单�?客户�?..">
+        </div>
+        <div class="filter-tabs" id="orderFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="pending">待处�?/div>
+            <div class="filter-tab" data-filter="picking">拣货�?/div>
+            <div class="filter-tab" data-filter="completed">已完�?/div>
+        </div>
+        <div class="list-content" id="orderList"></div>
+        <div class="pagination" id="orderPagination"></div>
+    </div>
+
+    <!-- 订单表单�?-->
+    <div class="form-page" id="orderFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('orderListPage')">�?返回</span>
+            <h2 id="orderFormTitle">新建订单</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>订单�?/label>
+                <input type="text" id="orderNo" placeholder="留空自动生成">
+            </div>
+            <div class="form-group">
+                <label>客户名称 *</label>
+                <input type="text" id="orderCustomer" placeholder="请输入客户名�?>
+            </div>
+            <div class="form-group">
+                <label>订单日期</label>
+                <input type="date" id="orderDate">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="orderRemark" placeholder="请输入备�?></textarea>
+            </div>
+            <div class="form-group">
+                <label>订单明细</label>
+                <div id="orderItems"></div>
+                <button class="btn btn-small" id="addOrderItemBtn" style="margin-top:10px;">+ 添加物料</button>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveOrderBtn">保存</button>
+            <button class="btn btn-danger" id="deleteOrderBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 智能拣货�?-->
+    <div class="list-page" id="pickListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>智能拣货</h2>
+            <span class="header-btn" id="manualOutBtn">手动出库</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportPickTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('pickImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportPickList()" style="flex:1;">📤导出</button>
+            <input type="file" id="pickImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importPickList(this)">
+        </div>
+        <div class="filter-tabs" id="pickFilter">
+            <div class="filter-tab active" data-filter="pending">待拣�?/div>
+            <div class="filter-tab" data-filter="picking">拣货�?/div>
+            <div class="filter-tab" data-filter="completed">已完�?/div>
+        </div>
+        <div class="list-content" id="pickList"></div>
+    </div>
+
+    <!-- 拣货详情�?-->
+    <div class="form-page" id="pickDetailPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('pickListPage')">�?返回</span>
+            <h2>拣货任务</h2>
+            <span class="header-btn" id="completePickBtn">完成</span>
+        </div>
+        <div class="form-content">
+            <div class="mobile-step">
+                <div class="step-title" id="pickOrderInfo">订单信息</div>
+                <div id="pickOrderDetails"></div>
+            </div>
+            <div class="mobile-step">
+                <div class="step-title">拣货清单</div>
+                <div id="pickItems"></div>
+            </div>
+        </div>
+        <div class="scan-btn" id="scanPickBtn">📷</div>
+    </div>
+
+    <!-- 条形码页 -->
+    <div class="list-page" id="barcodePage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>条形码管�?/h2>
+            <span></span>
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="barcodeSearch" placeholder="搜索物料编码/名称...">
+        </div>
+        <div class="list-content" id="barcodeList"></div>
+    </div>
+
+    <!-- 条形码详情页 -->
+    <div class="form-page" id="barcodeDetailPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('barcodePage')">�?返回</span>
+            <h2>条形码详�?/h2>
+            <span class="header-btn" id="printBarcodeBtn">打印</span>
+        </div>
+        <div class="form-content">
+            <div class="barcode-container">
+                <div class="barcode-title" id="barcodeTitle"></div>
+                <div class="barcode-value" id="barcodeValue"></div>
+                <svg id="barcodeImage"></svg>
+            </div>
+            <div class="form-group">
+                <label>标签尺寸</label>
+                <select id="barcodeSize">
+                    <option value="small">�?(50x25mm)</option>
+                    <option value="medium" selected>�?(70x35mm)</option>
+                    <option value="large">�?(100x50mm)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="printLabelBtn">打印标签</button>
+        </div>
+    </div>
+
+    <!-- 仓库管理�?-->
+    <div class="list-page" id="warehousePage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>仓库管理</h2>
+            <span class="header-btn" id="addWarehouseBtn">+ 添加</span>
+        </div>
+        <div class="list-content" id="warehouseList"></div>
+    </div>
+
+    <!-- 库位管理�?-->
+    <div class="list-page" id="locationPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>库位管理</h2>
+            <span class="header-btn" id="addLocationBtn">+ 添加</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportLocationTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('locationImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportLocationList()" style="flex:1;">📤导出</button>
+            <input type="file" id="locationImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importLocationList(this)">
+        </div>
+        <div class="list-content" id="locationList"></div>
+    </div>
+
+    <!-- 用户管理�?-->
+    <div class="list-page" id="userPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>用户管理</h2>
+            <span class="header-btn" id="addUserBtn">+ 添加</span>
+        </div>
+        <div class="list-content" id="userList"></div>
+    </div>
+
+    <!-- 预警列表�?-->
+    <div class="list-page" id="warningListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>库存预警</h2>
+            <span></span>
+        </div>
+        <div class="list-content" id="warningList"></div>
+    </div>
+
+    <!-- 供应商列表页 -->
+    <div class="list-page" id="supplierListPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>供应商管�?/h2>
+            <span class="header-btn" id="addSupplierBtn">+ 添加</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportSupplierTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('supplierImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportSupplierList()" style="flex:1;">📤导出</button>
+            <input type="file" id="supplierImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importSupplierList(this)">
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="supplierSearch" placeholder="搜索供应商编�?名称...">
+        </div>
+        <div class="filter-tabs" id="supplierFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="active">合作�?/div>
+            <div class="filter-tab" data-filter="inactive">已停�?/div>
+        </div>
+        <div class="list-content" id="supplierList"></div>
+        <div class="pagination" id="supplierPagination"></div>
+    </div>
+
+    <!-- 供应商表单页 -->
+    <div class="form-page" id="supplierFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('supplierListPage')">�?返回</span>
+            <h2 id="supplierFormTitle">添加供应�?/h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>内部供应商编�?*</label>
+                <input type="text" id="supplierCode" placeholder="留空自动生成" readonly style="background:#f5f5f5;">
+            </div>
+            <div class="form-group">
+                <label>供应商名�?*</label>
+                <input type="text" id="supplierName" placeholder="请输入供应商名称">
+            </div>
+            <div class="form-group">
+                <label>简�?/label>
+                <input type="text" id="supplierShortName" placeholder="请输入简�?>
+            </div>
+            <div class="form-group">
+                <label>联系�?/label>
+                <input type="text" id="supplierContact" placeholder="请输入联系人">
+            </div>
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" id="supplierPhone" placeholder="请输入联系电�?>
+            </div>
+            <div class="form-group">
+                <label>电子邮箱</label>
+                <input type="email" id="supplierEmail" placeholder="请输入邮�?>
+            </div>
+            <div class="form-group">
+                <label>地址</label>
+                <textarea id="supplierAddress" placeholder="请输入详细地址"></textarea>
+            </div>
+            <div class="form-group">
+                <label>开户银�?/label>
+                <input type="text" id="supplierBank" placeholder="请输入开户银�?>
+            </div>
+            <div class="form-group">
+                <label>银行账号</label>
+                <input type="text" id="supplierBankAccount" placeholder="请输入银行账�?>
+            </div>
+            <div class="form-group">
+                <label>税号</label>
+                <input type="text" id="supplierTaxNo" placeholder="请输入纳税人识别�?>
+            </div>
+            <div class="form-group">
+                <label>合作状�?/label>
+                <select id="supplierStatus">
+                    <option value="active">合作�?/option>
+                    <option value="inactive">已停�?/option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>信用等级</label>
+                <select id="supplierCreditLevel">
+                    <option value="A">A级（优秀�?/option>
+                    <option value="B">B级（良好�?/option>
+                    <option value="C">C级（一般）</option>
+                    <option value="D">D级（较差�?/option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>主营产品</label>
+                <input type="text" id="supplierProducts" placeholder="请输入主营产品，多个用逗号分隔">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="supplierRemark" placeholder="请输入备�?></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveSupplierBtn">保存</button>
+            <button class="btn btn-danger" id="deleteSupplierBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 仓库表单页 -->
+    <div class="form-page" id="warehouseFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('warehousePage')">← 返回</span>
+            <h2 id="warehouseFormTitle">添加仓库</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>仓库编码 *</label>
+                <input type="text" id="warehouseCode" placeholder="请输入仓库编码">
+            </div>
+            <div class="form-group">
+                <label>仓库名称 *</label>
+                <input type="text" id="warehouseName" placeholder="请输入仓库名称">
+            </div>
+            <div class="form-group">
+                <label>地址</label>
+                <input type="text" id="warehouseAddress" placeholder="请输入仓库地址">
+            </div>
+            <div class="form-group">
+                <label>负责人</label>
+                <input type="text" id="warehouseManager" placeholder="请输入负责人">
+            </div>
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" id="warehousePhone" placeholder="请输入联系电话">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="warehouseRemark" placeholder="请输入备注"></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveWarehouseBtn">保存</button>
+            <button class="btn btn-danger" id="deleteWarehouseBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 库位表单页 -->
+    <div class="form-page" id="locationFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('locationPage')">← 返回</span>
+            <h2 id="locationFormTitle">添加库位</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>库位编码 *（4位）</label>
+                <input type="text" id="locationCode" placeholder="例：0101" maxlength="4">
+            </div>
+            <div class="form-group">
+                <label>库位名称 *</label>
+                <input type="text" id="locationName" placeholder="请输入库位名称">
+            </div>
+            <div class="form-group">
+                <label>所属仓库</label>
+                <select id="locationWarehouse">
+                    <option value="">请选择仓库</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>库位类型</label>
+                <select id="locationType">
+                    <option value="storage">存储区</option>
+                    <option value="pick">拣货区</option>
+                    <option value="receiving">收货区</option>
+                    <option value="shipping">发货区</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select id="locationStatus">
+                    <option value="active">可用</option>
+                    <option value="inactive">不可用</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveLocationBtn">保存</button>
+            <button class="btn btn-danger" id="deleteLocationBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 用户表单页 -->
+    <div class="form-page" id="userFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('userPage')">← 返回</span>
+            <h2 id="userFormTitle">添加用户</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>用户名 *</label>
+                <input type="text" id="userUsername" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label>密码 *</label>
+                <input type="password" id="userPassword" placeholder="请输入密码">
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="userName" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+                <label>角色 *</label>
+                <select id="userRole">
+                    <option value="admin">超级管理员</option>
+                    <option value="manager">管理员</option>
+                    <option value="operator">操作员</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveUserBtn">保存</button>
+            <button class="btn btn-danger" id="deleteUserBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 盘点页面 -->
+    <div class="list-page" id="inventoryPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">�?返回</span>
+            <h2>库存盘点</h2>
+            <span class="header-btn" id="startInventoryBtn">+ 新建盘点</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small btn-warning" onclick="exportInventoryList()" style="flex:1;">📤导出盘点�?/button>
+        </div>
+        <div class="filter-tabs" id="inventoryFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="pending">待盘�?/div>
+            <div class="filter-tab" data-filter="completed">已完�?/div>
+        </div>
+        <div class="list-content" id="inventoryList"></div>
+    </div>
+
+    <!-- 盘点详情�?-->
+    <div class="form-page" id="inventoryDetailPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('inventoryPage')">�?返回</span>
+            <h2>盘点详情</h2>
+            <span class="header-btn" id="completeInventoryBtn">完成盘点</span>
+        </div>
+        <div class="form-content" id="inventoryDetailContent"></div>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle"></span>
+                <span class="modal-close" id="modalClose">×</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 全局变量
+        let currentUser = null;
+        let currentWarehouse = 'warehouse1';
+        let currentPage = 1;
+        let pageSize = 20;
+        let editingMaterial = null;
+        let editingOrder = null;
+        let currentPickOrder = null;
+        let currentPickItem = 0;
+
+        // 数据存储
+        const DB = {
+            get: (key) => {
+                try {
+                    return JSON.parse(localStorage.getItem(key)) || [];
+                } catch {
+                    return [];
+                }
+            },
+            set: (key, data) => {
+                localStorage.setItem(key, JSON.stringify(data));
+            },
+            getOne: (key) => {
+                try {
+                    return JSON.parse(localStorage.getItem(key)) || {};
+                } catch {
+                    return {};
+                }
+            }
+        };
+
+        // 初始化数�?
+        function initData() {
+            // 初始化用�?- 只保留超级管理员hwq
+            DB.set('users', [
+                { id: 1, username: 'hwq', password: '568394', role: 'admin', name: '超级管理�? }
+            ]);
+            
+            // 初始化仓�?- 清空现有数据，只保留添加功能
+            DB.set('warehouses', []);
+            
+            // 初始化库�?
+            if (!DB.get('locations').length) {
+                const locations = [];
+                for (let i = 1; i <= 10; i++) {
+                    locations.push({ id: `A-${i}`, code: `A-${i}`, name: `A�?{i}号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `B-${i}`, code: `B-${i}`, name: `B�?{i}号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `C-${i}`, code: `C-${i}`, name: `C�?{i}号`, warehouse: 'warehouse1' });
+                }
+                DB.set('locations', locations);
+            }
+            
+            // 初始化物料（示例数据�?
+            if (!DB.get('materials').length) {
+                const materials = [];
+                for (let i = 1; i <= 100; i++) {
+                    materials.push({
+                        id: i,
+                        code: `MAT${String(i).padStart(4, '0')}`,
+                        name: `物料${i}`,
+                        spec: `规格${i}`,
+                        unit: '�?,
+                        price: (Math.random() * 100).toFixed(2),
+                        category: i % 3 === 0 ? 'A�? : (i % 3 === 1 ? 'B�? : 'C�?),
+                        safetyStock: 10,
+                        maxStock: 1000,
+                        barcode: `BC${String(i).padStart(8, '0')}`,
+                        warehouse: 'warehouse1',
+                        createTime: new Date().toISOString()
+                    });
+                }
+                DB.set('materials', materials);
+            }
+            
+            // 初始化库�?
+            if (!DB.get('stocks').length) {
+                const stocks = [];
+                const materials = DB.get('materials');
+                materials.forEach(m => {
+                    const qty = Math.floor(Math.random() * 100);
+                    if (qty > 0) {
+                        stocks.push({
+                            id: Date.now() + m.id,
+                            materialId: m.id,
+                            materialCode: m.code,
+                            materialName: m.name,
+                            quantity: qty,
+                            location: `A-${Math.floor(Math.random() * 10) + 1}`,
+                            warehouse: 'warehouse1',
+                            batch: `B${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`,
+                            inTime: new Date().toISOString()
+                        });
+                    }
+                });
+                DB.set('stocks', stocks);
+            }
+            
+            // 初始化订�?
+            if (!DB.get('orders').length) {
+                const orders = [];
+                for (let i = 1; i <= 10; i++) {
+                    const items = [];
+                    const itemCount = Math.floor(Math.random() * 3) + 1;
+                    for (let j = 1; j <= itemCount; j++) {
+                        items.push({
+                            materialId: Math.floor(Math.random() * 100) + 1,
+                            materialCode: `MAT${String(Math.floor(Math.random() * 100) + 1).padStart(4, '0')}`,
+                            materialName: `物料${Math.floor(Math.random() * 100) + 1}`,
+                            quantity: Math.floor(Math.random() * 10) + 1,
+                            pickedQty: 0
+                        });
+                    }
+                    orders.push({
+                        id: i,
+                        orderNo: `ORD${String(i).padStart(6, '0')}`,
+                        customer: `客户${i}`,
+                        items: items,
+                        status: 'pending',
+                        createTime: new Date().toISOString(),
+                        warehouse: 'warehouse1'
+                    });
+                }
+                DB.set('orders', orders);
+            }
+        }
+
+        // 显示页面
+        function showPage(pageId) {
+            document.querySelectorAll('.list-page, .form-page').forEach(p => p.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+            
+            // 刷新数据
+            if (pageId === 'materialListPage') renderMaterialList();
+            if (pageId === 'stockListPage') renderStockList();
+            if (pageId === 'orderListPage') renderOrderList();
+            if (pageId === 'pickListPage') renderPickList();
+            if (pageId === 'barcodePage') renderBarcodeList();
+            if (pageId === 'warehousePage') renderWarehouseList();
+            if (pageId === 'locationPage') renderLocationList();
+            if (pageId === 'userPage') renderUserList();
+            if (pageId === 'warningListPage') renderWarningList();
+        }
+
+        // 显示Toast
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.className = 'toast', 2000);
+        }
+
+        // 显示模态框
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        // 格式化数字（千分位）
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // 生成条形�?
+        function generateBarcode(code) {
+            try {
+                JsBarcode('#barcodeImage', code, {
+                    format: 'CODE128',
+                    width: 2,
+                    height: 80,
+                    displayValue: true,
+                    fontSize: 14
+                });
+            } catch (e) {
+                console.error('条形码生成失�?, e);
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            const orders = DB.get('orders');
+            
+            document.getElementById('materialCount').textContent = formatNumber(materials.length);
+            document.getElementById('stockCount').textContent = formatNumber(stocks.reduce((sum, s) => sum + s.quantity, 0));
+            document.getElementById('orderCount').textContent = formatNumber(orders.length);
+            
+            // 计算预警数量
+            let warningCount = 0;
+            materials.forEach(m => {
+                const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
+                if (stock < m.safetyStock) warningCount++;
+            });
+            document.getElementById('warningCount').textContent = warningCount;
+            
+            // 显示预警横幅
+            const alertBanner = document.getElementById('alertBanner');
+            if (warningCount > 0) {
+                alertBanner.style.display = 'flex';
+                document.getElementById('alertCount').textContent = warningCount;
+                document.getElementById('alertCountBadge').textContent = warningCount;
+            } else {
+                alertBanner.style.display = 'none';
+            }
+        }
+
+        // 渲染物料列表
+        function renderMaterialList() {
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            const search = document.getElementById('materialSearch').value.toLowerCase();
+            const filter = document.querySelector('#materialFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = materials.filter(m => {
+                const match = m.code.toLowerCase().includes(search) || m.name.toLowerCase().includes(search);
+                const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
+                if (filter === 'low') return match && stock < m.safetyStock;
+                if (filter === 'normal') return match && stock >= m.safetyStock;
+                return match;
+            });
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paged = filtered.slice(start, end);
+            
+            const container = document.getElementById('materialList');
+            if (paged.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>暂无物料</div></div>';
+            } else {
+                container.innerHTML = paged.map(m => {
+                    const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
+                    const stockClass = stock < m.safetyStock ? 'danger' : 'success';
+                    return `
+                        <div class="list-item" onclick="editMaterial(${m.id})">
+                            <div class="list-item-row">
+                                <span class="list-item-label">编码</span>
+                                <span class="list-item-value">${m.code}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">名称</span>
+                                <span class="list-item-value">${m.name}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">规格</span>
+                                <span class="list-item-value">${m.spec || '-'}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">库存</span>
+                                <span class="list-item-value ${stockClass}">${formatNumber(stock)} ${m.unit || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // 渲染分页
+            renderPagination('materialPagination', filtered.length, () => renderMaterialList());
+        }
+
+        // 渲染分页
+        function renderPagination(containerId, total, callback) {
+            const totalPages = Math.ceil(total / pageSize);
+            const container = document.getElementById(containerId);
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            if (currentPage > 1) {
+                html += `<span class="page-btn" onclick="changePage(${currentPage - 1}, ${callback.toString()})">上一�?/span>`;
+            }
+            
+            for (let i = 1; i <= totalPages && i <= 5; i++) {
+                html += `<span class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i}, ${callback.toString()})">${i}</span>`;
+            }
+            
+            if (currentPage < totalPages) {
+                html += `<span class="page-btn" onclick="changePage(${currentPage + 1}, ${callback.toString()})">下一�?/span>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 切换页码
+        function changePage(page, callback) {
+            currentPage = page;
+            callback();
+        }
+
+        // 编辑物料
+        function editMaterial(id) {
+            const materials = DB.get('materials');
+            const material = materials.find(m => m.id === id);
+            if (!material) return;
+            
+            editingMaterial = material;
+            document.getElementById('materialFormTitle').textContent = '编辑物料';
+            document.getElementById('materialCode').value = material.code;
+            document.getElementById('materialName').value = material.name;
+            document.getElementById('materialSpec').value = material.spec || '';
+            document.getElementById('materialUnit').value = material.unit || '';
+            document.getElementById('materialPrice').value = material.price || '';
+            document.getElementById('materialCategory').value = material.category || '';
+            document.getElementById('materialSafetyStock').value = material.safetyStock || 10;
+            document.getElementById('materialMaxStock').value = material.maxStock || 1000;
+            document.getElementById('materialBarcode').value = material.barcode || '';
+            document.getElementById('materialRemark').value = material.remark || '';
+            document.getElementById('deleteMaterialBtn').style.display = 'block';
+            
+            showPage('materialFormPage');
+        }
+
+        // 渲染库存列表
+        function renderStockList() {
+            const stocks = DB.get('stocks');
+            const materials = DB.get('materials');
+            const search = document.getElementById('stockSearch').value.toLowerCase();
+            const filter = document.querySelector('#stockFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = stocks.filter(s => {
+                const material = materials.find(m => m.id === s.materialId);
+                const match = s.materialCode.toLowerCase().includes(search) || s.materialName.toLowerCase().includes(search);
+                if (!match) return false;
+                if (filter === 'low') return material && s.quantity < material.safetyStock;
+                if (filter === 'warning') return material && s.quantity < material.safetyStock * 1.2;
+                return true;
+            });
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paged = filtered.slice(start, end);
+            
+            const container = document.getElementById('stockList');
+            if (paged.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div>暂无库存</div></div>';
+            } else {
+                container.innerHTML = paged.map(s => {
+                    const material = materials.find(m => m.id === s.materialId);
+                    const stockClass = material && s.quantity < material.safetyStock ? 'danger' : 'success';
+                    return `
+                        <div class="list-item" onclick="showStockDetail(${s.id})">
+                            <div class="list-item-row">
+                                <span class="list-item-label">物料编码</span>
+                                <span class="list-item-value">${s.materialCode}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">物料名称</span>
+                                <span class="list-item-value">${s.materialName}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">库存数量</span>
+                                <span class="list-item-value ${stockClass}">${formatNumber(s.quantity)}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">库位</span>
+                                <span class="list-item-value">${s.location}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">批次</span>
+                                <span class="list-item-value">${s.batch}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            renderPagination('stockPagination', filtered.length, () => renderStockList());
+        }
+
+        // 渲染订单列表
+        function renderOrderList() {
+            const orders = DB.get('orders');
+            const search = document.getElementById('orderSearch').value.toLowerCase();
+            const filter = document.querySelector('#orderFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = orders.filter(o => {
+                const match = o.orderNo.toLowerCase().includes(search) || o.customer.toLowerCase().includes(search);
+                if (!match) return false;
+                if (filter === 'all') return true;
+                return o.status === filter;
+            });
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paged = filtered.slice(start, end);
+            
+            const container = document.getElementById('orderList');
+            if (paged.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>暂无订单</div></div>';
+            } else {
+                container.innerHTML = paged.map(o => {
+                    const statusText = { pending: '待处�?, picking: '拣货�?, completed: '已完�? }[o.status];
+                    const statusClass = { pending: 'warning', picking: 'success', completed: 'success' }[o.status];
+                    return `
+                        <div class="list-item" onclick="editOrder(${o.id})">
+                            <div class="list-item-row">
+                                <span class="list-item-label">订单�?/span>
+                                <span class="list-item-value">${o.orderNo}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">客户</span>
+                                <span class="list-item-value">${o.customer}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">物料�?/span>
+                                <span class="list-item-value">${o.items.length}�?/span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">状�?/span>
+                                <span class="list-item-value ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            renderPagination('orderPagination', filtered.length, () => renderOrderList());
+        }
+
+        // 编辑订单
+        function editOrder(id) {
+            const orders = DB.get('orders');
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            editingOrder = order;
+            document.getElementById('orderFormTitle').textContent = '订单详情';
+            document.getElementById('orderNo').value = order.orderNo;
+            document.getElementById('orderCustomer').value = order.customer;
+            document.getElementById('orderDate').value = order.createTime.split('T')[0];
+            document.getElementById('orderRemark').value = order.remark || '';
+            
+            renderOrderItems(order.items);
+            document.getElementById('deleteOrderBtn').style.display = 'block';
+            
+            showPage('orderFormPage');
+        }
+
+        // 渲染订单明细
+        function renderOrderItems(items) {
+            const container = document.getElementById('orderItems');
+            container.innerHTML = items.map((item, index) => `
+                <div class="list-item" style="margin-bottom:10px;">
+                    <div class="list-item-row">
+                        <span class="list-item-label">物料</span>
+                        <span class="list-item-value">${item.materialCode} ${item.materialName}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">数量</span>
+                        <span class="list-item-value">${item.quantity}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染拣货列表
+        function renderPickList() {
+            const orders = DB.get('orders');
+            const filter = document.querySelector('#pickFilter .filter-tab.active')?.dataset.filter || 'pending';
+            
+            const filtered = orders.filter(o => o.status === filter);
+            
+            const container = document.getElementById('pickList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">🚚</div><div>暂无拣货任务</div></div>';
+            } else {
+                container.innerHTML = filtered.map(o => `
+                    <div class="list-item" onclick="startPick(${o.id})">
+                        <div class="list-item-row">
+                            <span class="list-item-label">订单�?/span>
+                            <span class="list-item-value">${o.orderNo}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">客户</span>
+                            <span class="list-item-value">${o.customer}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">物料�?/span>
+                            <span class="list-item-value">${o.items.length}�?/span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 开始拣�?
+        function startPick(id) {
+            const orders = DB.get('orders');
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            currentPickOrder = order;
+            currentPickItem = 0;
+            
+            // 更新订单状�?
+            order.status = 'picking';
+            DB.set('orders', orders);
+            
+            document.getElementById('pickOrderInfo').textContent = `订单: ${order.orderNo} - ${order.customer}`;
+            document.getElementById('pickOrderDetails').innerHTML = `
+                <div class="list-item-row">
+                    <span class="list-item-label">订单�?/span>
+                    <span class="list-item-value">${order.orderNo}</span>
+                </div>
+                <div class="list-item-row">
+                    <span class="list-item-label">客户</span>
+                    <span class="list-item-value">${order.customer}</span>
+                </div>
+            `;
+            
+            renderPickItems();
+            showPage('pickDetailPage');
+        }
+
+        // 渲染拣货清单
+        function renderPickItems() {
+            if (!currentPickOrder) return;
+            
+            const container = document.getElementById('pickItems');
+            container.innerHTML = currentPickOrder.items.map((item, index) => {
+                const done = item.pickedQty >= item.quantity;
+                const current = index === currentPickItem;
+                return `
+                    <div class="pick-route ${current ? 'pick-route-current' : ''} ${done ? 'pick-route-done' : ''}" onclick="pickItem(${index})">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <span class="pick-route-num">${index + 1}</span>
+                                <span>${item.materialCode} ${item.materialName}</span>
+                            </div>
+                            <div>
+                                <span style="color:${done ? '#52c41a' : '#666'};">${item.pickedQty}/${item.quantity}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 拣货�?
+        function pickItem(index) {
+            currentPickItem = index;
+            const item = currentPickOrder.items[index];
+            
+            showModal('确认拣货', `
+                <div class="form-group">
+                    <label>物料</label>
+                    <input type="text" value="${item.materialCode} ${item.materialName}" readonly style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>需拣数�?/label>
+                    <input type="text" value="${item.quantity - item.pickedQty}" readonly style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>拣货数量</label>
+                    <input type="number" id="pickQty" value="${item.quantity - item.pickedQty}" min="1" max="${item.quantity - item.pickedQty}">
+                </div>
+                <button class="btn btn-success" onclick="confirmPick(${index})">确认拣货</button>
+            `);
+        }
+
+        // 确认拣货
+        function confirmPick(index) {
+            const qty = parseInt(document.getElementById('pickQty').value);
+            if (!qty || qty <= 0) {
+                showToast('请输入有效数�?, 'error');
+                return;
+            }
+            
+            currentPickOrder.items[index].pickedQty += qty;
+            
+            // 更新库存
+            const stocks = DB.get('stocks');
+            const item = currentPickOrder.items[index];
+            const stock = stocks.find(s => s.materialId === item.materialId);
+            if (stock) {
+                stock.quantity -= qty;
+                DB.set('stocks', stocks);
+            }
+            
+            // 更新订单
+            const orders = DB.get('orders');
+            const orderIndex = orders.findIndex(o => o.id === currentPickOrder.id);
+            orders[orderIndex] = currentPickOrder;
+            DB.set('orders', orders);
+            
+            closeModal();
+            showToast('拣货成功', 'success');
+            
+            // 检查是否完�?
+            if (currentPickOrder.items.every(i => i.pickedQty >= i.quantity)) {
+                currentPickOrder.status = 'completed';
+                orders[orderIndex] = currentPickOrder;
+                DB.set('orders', orders);
+            }
+            
+            renderPickItems();
+            updateStats();
+        }
+
+        // 渲染条形码列�?
+        function renderBarcodeList() {
+            const materials = DB.get('materials');
+            const search = document.getElementById('barcodeSearch').value.toLowerCase();
+            
+            const filtered = materials.filter(m => 
+                m.code.toLowerCase().includes(search) || m.name.toLowerCase().includes(search)
+            );
+            
+            const container = document.getElementById('barcodeList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📱</div><div>暂无物料</div></div>';
+            } else {
+                container.innerHTML = filtered.slice(0, 50).map(m => `
+                    <div class="list-item" onclick="showBarcode(${m.id})">
+                        <div class="list-item-row">
+                            <span class="list-item-label">编码</span>
+                            <span class="list-item-value">${m.code}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">名称</span>
+                            <span class="list-item-value">${m.name}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">条形�?/span>
+                            <span class="list-item-value">${m.barcode}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 显示条形�?
+        function showBarcode(id) {
+            const materials = DB.get('materials');
+            const material = materials.find(m => m.id === id);
+            if (!material) return;
+            
+            document.getElementById('barcodeTitle').textContent = `${material.code} - ${material.name}`;
+            document.getElementById('barcodeValue').textContent = material.barcode;
+            generateBarcode(material.barcode);
+            
+            showPage('barcodeDetailPage');
+        }
+
+        // 渲染仓库列表
+        function renderWarehouseList() {
+            const warehouses = DB.get('warehouses');
+            
+            const container = document.getElementById('warehouseList');
+            container.innerHTML = warehouses.map(w => `
+                <div class="list-item">
+                    <div class="list-item-row">
+                        <span class="list-item-label">编码</span>
+                        <span class="list-item-value">${w.code}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">名称</span>
+                        <span class="list-item-value">${w.name}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">地址</span>
+                        <span class="list-item-value">${w.address}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">负责�?/span>
+                        <span class="list-item-value">${w.manager}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染库位列表
+        function renderLocationList() {
+            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
+            
+            const container = document.getElementById('locationList');
+            container.innerHTML = locations.map(l => `
+                <div class="list-item" onclick="showLocationBarcode('${l.id}')">
+                    <div class="list-item-row">
+                        <span class="list-item-label">编码</span>
+                        <span class="list-item-value">${l.code}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">名称</span>
+                        <span class="list-item-value">${l.name}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 显示库位条形�?
+        function showLocationBarcode(id) {
+            const locations = DB.get('locations');
+            const location = locations.find(l => l.id === id);
+            if (!location) return;
+            
+            document.getElementById('barcodeTitle').textContent = `${location.code} - ${location.name}`;
+            document.getElementById('barcodeValue').textContent = location.code;
+            generateBarcode(location.code);
+            
+            showPage('barcodeDetailPage');
+        }
+
+        // 渲染用户列表
+        function renderUserList() {
+            const users = DB.get('users');
+            const roleText = { admin: '超级管理�?, manager: '管理�?, operator: '操作�? };
+            
+            const container = document.getElementById('userList');
+            container.innerHTML = users.map(u => `
+                <div class="list-item">
+                    <div class="list-item-row">
+                        <span class="list-item-label">用户�?/span>
+                        <span class="list-item-value">${u.username}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">姓名</span>
+                        <span class="list-item-value">${u.name}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">角色</span>
+                        <span class="list-item-value ${u.role}">${roleText[u.role]}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染预警列表
+        function renderWarningList() {
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            
+            const warnings = materials.filter(m => {
+                const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
+                return stock < m.safetyStock;
+            }).map(m => {
+                const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
+                return { ...m, currentStock: stock };
+            });
+            
+            const container = document.getElementById('warningList');
+            if (warnings.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">�?/div><div>库存正常</div></div>';
+            } else {
+                container.innerHTML = warnings.map(w => `
+                    <div class="list-item" onclick="editMaterial(${w.id})">
+                        <div class="list-item-row">
+                            <span class="list-item-label">编码</span>
+                            <span class="list-item-value">${w.code}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">名称</span>
+                            <span class="list-item-value">${w.name}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">当前库存</span>
+                            <span class="list-item-value danger">${formatNumber(w.currentStock)}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">安全库存</span>
+                            <span class="list-item-value">${formatNumber(w.safetyStock)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 初始化供应商数据
+        function initSupplierData() {
+            if (!DB.get('suppliers').length) {
+                DB.set('suppliers', [
+                    { id: 1, code: 'SUP001', name: '华东物资有限公司', shortName: '华东物资', contact: '张经�?, phone: '021-12345678', email: 'huadong@163.com', address: '上海市浦东新区张江路123�?, bank: '中国工商银行', bankAccount: '6222021234567890', taxNo: '91310000MAE1234567', status: 'active', creditLevel: 'A', products: '钢材,水泥,木材', remark: '优质供应�?, createTime: new Date().toISOString() },
+                    { id: 2, code: 'SUP002', name: '南方机电设备公司', shortName: '南方机电', contact: '李经�?, phone: '020-87654321', email: 'nanfang@163.com', address: '广州市天河区珠江新城', bank: '中国建设银行', bankAccount: '6222021234567891', taxNo: '91310000MAE1234568', status: 'active', creditLevel: 'B', products: '电机,电缆,开�?, remark: '', createTime: new Date().toISOString() },
+                    { id: 3, code: 'SUP003', name: '北方化工原料�?, shortName: '北方化工', contact: '王经�?, phone: '010-11112222', email: 'beifang@163.com', address: '北京市朝阳区化工�?, bank: '中国农业银行', bankAccount: '6222021234567892', taxNo: '91310000MAE1234569', status: 'inactive', creditLevel: 'C', products: '化工原料,溶剂', remark: '暂停合作', createTime: new Date().toISOString() }
+                ]);
+            }
+        }
+
+        // 生成供应商编�?
+        function generateSupplierCode() {
+            const suppliers = DB.get('suppliers');
+            if (suppliers.length === 0) return 'SUP001';
+            const maxCode = suppliers.reduce((max, s) => {
+                const num = parseInt(s.code.replace('SUP', ''));
+                return num > max ? num : max;
+            }, 0);
+            return `SUP${String(maxCode + 1).padStart(3, '0')}`;
+        }
+
+        // 渲染供应商列�?
+        function renderSupplierList() {
+            const suppliers = DB.get('suppliers');
+            const search = document.getElementById('supplierSearch').value.toLowerCase();
+            const filter = document.querySelector('#supplierFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = suppliers.filter(s => {
+                const match = s.code.toLowerCase().includes(search) || s.name.toLowerCase().includes(search) || (s.shortName && s.shortName.toLowerCase().includes(search));
+                if (filter === 'active') return match && s.status === 'active';
+                if (filter === 'inactive') return match && s.status === 'inactive';
+                return match;
+            });
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paged = filtered.slice(start, end);
+            
+            const container = document.getElementById('supplierList');
+            if (paged.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div>暂无供应�?/div></div>';
+            } else {
+                container.innerHTML = paged.map(s => {
+                    const statusClass = s.status === 'active' ? 'success' : 'warning';
+                    const statusText = s.status === 'active' ? '合作�? : '已停�?;
+                    const creditClass = s.creditLevel === 'A' ? 'success' : s.creditLevel === 'B' ? 'warning' : 'danger';
+                    return `
+                        <div class="list-item" onclick="editSupplier(${s.id})">
+                            <div class="list-item-row">
+                                <span class="list-item-label">编码</span>
+                                <span class="list-item-value">${s.code}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">名称</span>
+                                <span class="list-item-value">${s.name}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">联系�?/span>
+                                <span class="list-item-value">${s.contact || '-'}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">电话</span>
+                                <span class="list-item-value">${s.phone || '-'}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">状�?/span>
+                                <span class="list-item-value ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="list-item-row">
+                                <span class="list-item-label">信用等级</span>
+                                <span class="list-item-value ${creditClass}">${s.creditLevel}�?/span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // 渲染分页
+            renderPagination('supplierPagination', filtered.length, () => renderSupplierList());
+        }
+
+        // 编辑供应�?
+        function editSupplier(id) {
+            const suppliers = DB.get('suppliers');
+            const supplier = suppliers.find(s => s.id === id);
+            if (!supplier) return;
+            
+            document.getElementById('supplierFormTitle').textContent = '编辑供应�?;
+            document.getElementById('supplierCode').value = supplier.code;
+            document.getElementById('supplierName').value = supplier.name;
+            document.getElementById('supplierShortName').value = supplier.shortName || '';
+            document.getElementById('supplierContact').value = supplier.contact || '';
+            document.getElementById('supplierPhone').value = supplier.phone || '';
+            document.getElementById('supplierEmail').value = supplier.email || '';
+            document.getElementById('supplierAddress').value = supplier.address || '';
+            document.getElementById('supplierBank').value = supplier.bank || '';
+            document.getElementById('supplierBankAccount').value = supplier.bankAccount || '';
+            document.getElementById('supplierTaxNo').value = supplier.taxNo || '';
+            document.getElementById('supplierStatus').value = supplier.status || 'active';
+            document.getElementById('supplierCreditLevel').value = supplier.creditLevel || 'B';
+            document.getElementById('supplierProducts').value = supplier.products || '';
+            document.getElementById('supplierRemark').value = supplier.remark || '';
+            
+            window.editingSupplier = supplier;
+            document.getElementById('deleteSupplierBtn').style.display = currentUser?.role === 'admin' ? 'block' : 'none';
+            showPage('supplierFormPage');
+        }
+
+        // 初始化库位选择
+        function initLocationSelect() {
+            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
+            const options = locations.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
+            
+            document.getElementById('stockInLocation').innerHTML = '<option value="">请选择库位</option>' + options;
+            document.getElementById('stockOutLocation').innerHTML = '<option value="">请选择库位</option>' + options;
+            document.getElementById('transferFromLocation').innerHTML = '<option value="">请选择原库�?/option>' + options;
+            document.getElementById('transferToLocation').innerHTML = '<option value="">请选择目标库位</option>' + options;
+        }
+        
+        // 库位搜索过滤
+        function filterLocationSelect(searchInputId, selectId) {
+            const search = document.getElementById(searchInputId).value.toLowerCase();
+            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
+            const filtered = locations.filter(l => 
+                l.code.toLowerCase().includes(search) || 
+                l.name.toLowerCase().includes(search)
+            );
+            const options = filtered.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
+            document.getElementById(selectId).innerHTML = '<option value="">请选择库位</option>' + options;
+        }
+        
+        // 初始化供应商选择
+        function initSupplierSelect() {
+            const suppliers = DB.get('suppliers').filter(s => s.status === 'active');
+            const options = suppliers.map(s => `<option value="${s.code}">${s.code} - ${s.shortName || s.name}</option>`).join('');
+            
+            document.getElementById('stockInSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+            document.getElementById('stockOutSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+            document.getElementById('transferSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+        }
+
+        // ========== 盘点功能 ==========
+        function renderInventoryList() {
+            const inventories = DB.get('inventories') || [];
+            const filter = document.querySelector('#inventoryFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = inventories.filter(i => {
+                if (filter === 'pending') return i.status === 'pending';
+                if (filter === 'completed') return i.status === 'completed';
+                return true;
+            });
+            
+            const container = document.getElementById('inventoryList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>暂无盘点记录</div></div>';
+            } else {
+                container.innerHTML = filtered.map(i => `
+                    <div class="list-item" onclick="showInventoryDetail(${i.id})">
+                        <div class="list-item-row">
+                            <span class="list-item-label">盘点单号</span>
+                            <span class="list-item-value">${i.code}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">状�?/span>
+                            <span class="list-item-value ${i.status === 'completed' ? 'success' : 'warning'}">${i.status === 'completed' ? '已完�? : '待盘�?}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">盘点时间</span>
+                            <span class="list-item-value">${i.createTime || '-'}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function createNewInventory() {
+            const inventories = DB.get('inventories') || [];
+            const newInv = {
+                id: Date.now(),
+                code: `INV${String(Date.now()).slice(-6)}`,
+                status: 'pending',
+                items: [],
+                createTime: new Date().toLocaleString(),
+                warehouse: currentWarehouse
+            };
+            
+            // 添加所有物料到盘点列表
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            
+            materials.forEach(m => {
+                const stock = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse).reduce((sum, s) => sum + s.quantity, 0);
+                newInv.items.push({
+                    materialId: m.id,
+                    materialCode: m.code,
+                    materialName: m.name,
+                    systemQty: stock,
+                    actualQty: 0,
+                    diff: -stock,
+                    location: ''
+                });
+            });
+            
+            inventories.push(newInv);
+            DB.set('inventories', inventories);
+            showInventoryDetail(newInv.id);
+        }
+        
+        function showInventoryDetail(id) {
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === id);
+            if (!inv) return;
+            
+            window.currentInventory = inv;
+            
+            const content = document.getElementById('inventoryDetailContent');
+            content.innerHTML = `
+                <div class="mobile-step">
+                    <div class="step-title">盘点�? ${inv.code}</div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">状�?/span>
+                        <span class="list-item-value ${inv.status === 'completed' ? 'success' : 'warning'}">${inv.status === 'completed' ? '已完�? : '待盘�?}</span>
+                    </div>
+                </div>
+                <div class="mobile-step">
+                    <div class="step-title">盘点明细</div>
+                    <div id="inventoryItems"></div>
+                </div>
+            `;
+            
+            renderInventoryItems(inv);
+            showPage('inventoryDetailPage');
+        }
+        
+        function renderInventoryItems(inv) {
+            const container = document.getElementById('inventoryItems');
+            container.innerHTML = inv.items.map((item, idx) => `
+                <div class="list-item">
+                    <div class="list-item-row">
+                        <span class="list-item-label">物料</span>
+                        <span class="list-item-value">${item.materialCode} ${item.materialName}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">系统库存</span>
+                        <span class="list-item-value">${item.systemQty}</span>
+                    </div>
+                    <div class="form-group">
+                        <label>实盘数量</label>
+                        <input type="number" id="actualQty_${idx}" value="${item.actualQty || 0}" min="0" onchange="updateInventoryItem(${idx}, this.value)">
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">差异</span>
+                        <span class="list-item-value ${item.diff > 0 ? 'success' : (item.diff < 0 ? 'danger' : '')}">${item.diff}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateInventoryItem(idx, actualQty) {
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === window.currentInventory.id);
+            if (!inv) return;
+            
+            inv.items[idx].actualQty = parseInt(actualQty) || 0;
+            inv.items[idx].diff = inv.items[idx].actualQty - inv.items[idx].systemQty;
+            DB.set('inventories', inventories);
+            renderInventoryItems(inv);
+        }
+        
+        function completeCurrentInventory() {
+            if (!window.currentInventory) return;
+            
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === window.currentInventory.id);
+            if (!inv) return;
+            
+            inv.status = 'completed';
+            DB.set('inventories', inventories);
+            
+            // 更新库存
+            const stocks = DB.get('stocks');
+            inv.items.forEach(item => {
+                if (item.diff !== 0) {
+                    const stock = stocks.find(s => s.materialId === item.materialId && s.warehouse === currentWarehouse);
+                    if (stock) {
+                        stock.quantity = item.actualQty;
+                    }
+                }
+            });
+            DB.set('stocks', stocks);
+            
+            showToast('盘点完成', 'success');
+            showPage('inventoryPage');
+            renderInventoryList();
+        }
+        
+        function exportInventoryList() {
+            const stocks = DB.get('stocks');
+            const materials = DB.get('materials');
+            const locations = DB.get('locations');
+            
+            let data = [['物料编码', '物料名称', '库位', '系统库存']];
+            
+            materials.forEach(m => {
+                const stockList = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse);
+                stockList.forEach(s => {
+                    const loc = locations.find(l => l.code === s.location);
+                    data.push([m.code, m.name, s.location || '-', s.quantity]);
+                });
+            });
+            
+            downloadCSV(data, '库存盘点�?csv');
+            showToast('导出成功', 'success');
+        }
+
+        // ========== Excel导入导出功能 ==========
+        function downloadExcel(data, filename) {
+            // 创建Excel工作�?
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            
+            // 生成Excel文件
+            const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+        
+        function exportMaterialTemplate() {
+            const data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库�?]];
+            data.push(['MAT0001', '示例物料', '规格A', '�?, '10.00', 'A�?, '10', '100']);
+            downloadExcel(data, '物料模板.xlsx');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportMaterialList() {
+            const materials = DB.get('materials');
+            let data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库�?]];
+            materials.forEach(m => {
+                data.push([m.code, m.name, m.spec || '', m.unit || '', m.price || '', m.category || '', m.safetyStock || 0, m.maxStock || 0]);
+            });
+            downloadExcel(data, '物料列表.xlsx');
+            showToast('导出成功', 'success');
+        }
+        
+        function importMaterialList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift(); // 去掉表头
+                
+                const materials = DB.get('materials');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        materials.push({
+                            id: Date.now() + count,
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            spec: row[2]?.trim() || '',
+                            unit: row[3]?.trim() || '�?,
+                            price: parseFloat(row[4]) || 0,
+                            category: row[5]?.trim() || '',
+                            safetyStock: parseInt(row[6]) || 10,
+                            maxStock: parseInt(row[7]) || 1000
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('materials', materials);
+                showToast(`导入成功${count}条`, 'success');
+                renderMaterialList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+        
+        function exportLocationTemplate() {
+            const data = [['库位编码', '库位名称', '仓库']];
+            data.push(['A-01', 'A�?�?, 'warehouse1']);
+            downloadExcel(data, '库位模板.xlsx');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportLocationList() {
+            const locations = DB.get('locations');
+            const warehouses = DB.get('warehouses');
+            let data = [['库位编码', '库位名称', '仓库ID']];
+            locations.forEach(l => {
+                const wh = warehouses.find(w => w.id === l.warehouse);
+                data.push([l.code, l.name, wh?.name || l.warehouse]);
+            });
+            downloadExcel(data, '库位列表.xlsx');
+            showToast('导出成功', 'success');
+        }
+        
+        function importLocationList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift();
+                
+                const locations = DB.get('locations');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        locations.push({
+                            id: row[0].trim() + '_' + Date.now(),
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            warehouse: row[2]?.trim() || currentWarehouse
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('locations', locations);
+                showToast(`导入成功${count}条`, 'success');
+                renderLocationList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+        
+        function exportPickTemplate() {
+            const data = [['订单�?, '客户名称']];
+            data.push(['ORD000001', '示例客户']);
+            downloadExcel(data, '拣货模板.xlsx');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportPickList() {
+            const orders = DB.get('orders').filter(o => o.status !== 'completed');
+            let data = [['订单�?, '客户', '状�?, '创建时间']];
+            orders.forEach(o => {
+                const statusText = o.status === 'pending' ? '待拣�? : (o.status === 'picking' ? '拣货�? : '已完�?);
+                data.push([o.orderNo, o.customer, statusText, o.createTime || '-']);
+            });
+            downloadExcel(data, '拣货列表.xlsx');
+            showToast('导出成功', 'success');
+        }
+        
+        function importPickList(input) {
+            showToast('拣货导入功能开发中', 'warning');
+            input.value = '';
+        }
+        
+        // 供应商导入导�?
+        function exportSupplierTemplate() {
+            const data = [['供应商编�?, '供应商名�?, '简�?, '联系�?, '电话', '邮箱', '地址', '开户银�?, '银行账号', '税号', '信用等级', '主营产品', '备注']];
+            data.push(['SUP001', '华东物资有限公司', '华东物资', '张经�?, '021-12345678', 'huadong@163.com', '上海市浦东新区张江路123�?, '中国工商银行', '6222021234567890', '91310000MAE1234567', 'A', '钢材,水泥,木材', '优质供应�?]);
+            downloadCSV(data, '供应商模�?csv');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportSupplierList() {
+            const suppliers = DB.get('suppliers');
+            let data = [['供应商编�?, '供应商名�?, '简�?, '联系�?, '电话', '邮箱', '地址', '开户银�?, '银行账号', '税号', '合作状�?, '信用等级', '主营产品', '备注']];
+            suppliers.forEach(s => {
+                data.push([s.code, s.name, s.shortName || '', s.contact || '', s.phone || '', s.email || '', s.address || '', s.bank || '', s.bankAccount || '', s.taxNo || '', s.status === 'active' ? '合作�? : '已停�?, s.creditLevel || '', s.products || '', s.remark || '']);
+            });
+            downloadCSV(data, '供应商列�?csv');
+            showToast('导出成功', 'success');
+        }
+        
+        function importSupplierList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift();
+                
+                const suppliers = DB.get('suppliers');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        suppliers.push({
+                            id: Date.now() + count,
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            shortName: row[2]?.trim() || '',
+                            contact: row[3]?.trim() || '',
+                            phone: row[4]?.trim() || '',
+                            email: row[5]?.trim() || '',
+                            address: row[6]?.trim() || '',
+                            bank: row[7]?.trim() || '',
+                            bankAccount: row[8]?.trim() || '',
+                            taxNo: row[9]?.trim() || '',
+                            status: 'active',
+                            creditLevel: row[10]?.trim() || 'B',
+                            products: row[11]?.trim() || '',
+                            remark: row[12]?.trim() || '',
+                            createTime: new Date().toISOString()
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('suppliers', suppliers);
+                showToast(`导入成功${count}条`, 'success');
+                renderSupplierList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // 事件绑定
+        document.addEventListener('DOMContentLoaded', function() {
+            initData();
+            initSupplierData();
+            
+            // 登录
+            document.getElementById('loginBtn').addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const role = document.getElementById('role').value;
+                
+                const users = DB.get('users');
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                if (user || (username === 'hwq' && password === '568394')) {
+                    currentUser = user || { username: 'hwq', role: 'admin', name: '超级管理�? };
+                    document.getElementById('currentUser').textContent = currentUser.username;
+                    document.getElementById('currentRole').textContent = { admin: '超级管理�?, manager: '管理�?, operator: '操作�? }[currentUser.role];
+                    
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('homePage').style.display = 'block';
+                    
+                    updateStats();
+                    initLocationSelect();
+                    initSupplierSelect();
+                } else {
+                    showToast('用户名或密码错误', 'error');
+                }
+            });
+            
+            // 退�?
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                currentUser = null;
+                document.getElementById('homePage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+            });
+            
+            // 仓库切换
+            document.getElementById('warehouseSelect').addEventListener('change', function() {
+                currentWarehouse = this.value;
+                initLocationSelect();
+                updateStats();
+            });
+            
+            // 预警横幅点击
+            document.getElementById('alertBanner').addEventListener('click', function() {
+                showPage('warningListPage');
+            });
+            
+            // 统计卡片点击
+            document.getElementById('statMaterial').addEventListener('click', () => showPage('materialListPage'));
+            document.getElementById('statStock').addEventListener('click', () => showPage('stockListPage'));
+            document.getElementById('statOrder').addEventListener('click', () => showPage('orderListPage'));
+            document.getElementById('statWarning').addEventListener('click', () => showPage('warningListPage'));
+            
+            // 快捷操作
+            document.getElementById('quickScan').addEventListener('click', () => {
+                showPage('stockInPage');
+                document.getElementById('stockInCode').focus();
+            });
+            document.getElementById('quickOut').addEventListener('click', () => {
+                showPage('stockOutPage');
+                document.getElementById('stockOutCode').focus();
+            });
+            document.getElementById('quickTransfer').addEventListener('click', () => {
+                showPage('transferPage');
+                initLocationSelect();
+            });
+            document.getElementById('quickPick').addEventListener('click', () => showPage('pickListPage'));
+            
+            // 功能模块
+            document.getElementById('moduleMaterial').addEventListener('click', () => showPage('materialListPage'));
+            document.getElementById('moduleStock').addEventListener('click', () => showPage('stockListPage'));
+            document.getElementById('moduleOrder').addEventListener('click', () => showPage('orderListPage'));
+            document.getElementById('modulePick').addEventListener('click', () => showPage('pickListPage'));
+            document.getElementById('moduleBarcode').addEventListener('click', () => showPage('barcodePage'));
+            document.getElementById('moduleWarehouse').addEventListener('click', () => showPage('warehousePage'));
+            document.getElementById('moduleLocation').addEventListener('click', () => showPage('locationPage'));
+            document.getElementById('moduleUser').addEventListener('click', () => showPage('userPage'));
+            document.getElementById('moduleReport').addEventListener('click', () => showToast('报表功能开发中'));
+            document.getElementById('moduleSupplier').addEventListener('click', () => {
+                currentPage = 1;
+                showPage('supplierListPage');
+                renderSupplierList();
+            });
+            document.getElementById('moduleInventory').addEventListener('click', () => {
+                showPage('inventoryPage');
+                renderInventoryList();
+            });
+            
+            // 新建盘点
+            document.getElementById('startInventoryBtn').addEventListener('click', function() {
+                createNewInventory();
+            });
+            
+            // 完成盘点
+            document.getElementById('completeInventoryBtn').addEventListener('click', function() {
+                completeCurrentInventory();
+            });
+            
+            // 添加物料
+            document.getElementById('addMaterialBtn').addEventListener('click', function() {
+                editingMaterial = null;
+                document.getElementById('materialFormTitle').textContent = '添加物料';
+                document.querySelectorAll('#materialFormPage input, #materialFormPage textarea').forEach(el => el.value = '');
+                document.getElementById('materialSafetyStock').value = 10;
+                document.getElementById('materialMaxStock').value = 1000;
+                document.getElementById('deleteMaterialBtn').style.display = 'none';
+                showPage('materialFormPage');
+            });
+
+            // 添加仓库
+            document.getElementById('addWarehouseBtn').addEventListener('click', function() {
+                editingWarehouse = null;
+                document.getElementById('warehouseFormTitle').textContent = '添加仓库';
+                document.querySelectorAll('#warehouseFormPage input, #warehouseFormPage textarea').forEach(el => el.value = '');
+                document.getElementById('deleteWarehouseBtn').style.display = 'none';
+                showPage('warehouseFormPage');
+            });
+
+            // 添加库位
+            document.getElementById('addLocationBtn').addEventListener('click', function() {
+                editingLocation = null;
+                document.getElementById('locationFormTitle').textContent = '添加库位';
+                document.querySelectorAll('#locationFormPage input, #locationFormPage select').forEach(el => el.value = '');
+                document.getElementById('locationCode').value = '';
+                document.getElementById('deleteLocationBtn').style.display = 'none';
+                showPage('locationFormPage');
+            });
+
+            // 添加用户
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                editingUser = null;
+                document.getElementById('userFormTitle').textContent = '添加用户';
+                document.querySelectorAll('#userFormPage input, #userFormPage select').forEach(el => el.value = '');
+                document.getElementById('deleteUserBtn').style.display = 'none';
+                showPage('userFormPage');
+            });
+            
+            // 保存物料
+            document.getElementById('saveMaterialBtn').addEventListener('click', function() {
+                const code = document.getElementById('materialCode').value.trim();
+                const name = document.getElementById('materialName').value.trim();
+                
+                if (!code || !name) {
+                    showToast('请填写物料编码和名称', 'error');
+                    return;
+                }
+                
+                const materials = DB.get('materials');
+                
+                if (editingMaterial) {
+                    const index = materials.findIndex(m => m.id === editingMaterial.id);
+                    materials[index] = {
+                        ...editingMaterial,
+                        code,
+                        name,
+                        spec: document.getElementById('materialSpec').value,
+                        unit: document.getElementById('materialUnit').value,
+                        price: document.getElementById('materialPrice').value,
+                        category: document.getElementById('materialCategory').value,
+                        safetyStock: parseInt(document.getElementById('materialSafetyStock').value) || 10,
+                        maxStock: parseInt(document.getElementById('materialMaxStock').value) || 1000,
+                        barcode: document.getElementById('materialBarcode').value || `BC${String(editingMaterial.id).padStart(8, '0')}`,
+                        remark: document.getElementById('materialRemark').value
+                    };
+                } else {
+                    const newMaterial = {
+                        id: Date.now(),
+                        code,
+                        name,
+                        spec: document.getElementById('materialSpec').value,
+                        unit: document.getElementById('materialUnit').value,
+                        price: document.getElementById('materialPrice').value,
+                        category: document.getElementById('materialCategory').value,
+                        safetyStock: parseInt(document.getElementById('materialSafetyStock').value) || 10,
+                        maxStock: parseInt(document.getElementById('materialMaxStock').value) || 1000,
+                        barcode: document.getElementById('materialBarcode').value || `BC${String(Date.now()).slice(-8)}`,
+                        remark: document.getElementById('materialRemark').value,
+                        warehouse: currentWarehouse,
+                        createTime: new Date().toISOString()
+                    };
+                    materials.push(newMaterial);
+                }
+                
+                DB.set('materials', materials);
+                showToast('保存成功', 'success');
+                showPage('materialListPage');
+                updateStats();
+            });
+            
+            // 删除物料
+            document.getElementById('deleteMaterialBtn').addEventListener('click', function() {
+                if (!editingMaterial) return;
+                
+                if (confirm('确定要删除这个物料吗�?)) {
+                    const materials = DB.get('materials');
+                    const index = materials.findIndex(m => m.id === editingMaterial.id);
+                    materials.splice(index, 1);
+                    DB.set('materials', materials);
+                    
+                    showToast('删除成功', 'success');
+                    showPage('materialListPage');
+                    updateStats();
+                }
+            });
+            
+            // 入库按钮
+            document.getElementById('stockInBtn').addEventListener('click', () => showPage('stockInPage'));
+            
+            // 手动出库按钮
+            document.getElementById('manualOutBtn').addEventListener('click', () => showPage('stockOutPage'));
+            
+            // 入库物料编码输入
+            document.getElementById('stockInCode').addEventListener('blur', function() {
+                const code = this.value.trim();
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (material) {
+                    document.getElementById('stockInName').value = material.name;
+                }
+            });
+            
+            // 出库物料编码输入
+            document.getElementById('stockOutCode').addEventListener('blur', function() {
+                const code = this.value.trim();
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (material) {
+                    document.getElementById('stockOutName').value = material.name;
+                    const stocks = DB.get('stocks');
+                    const total = stocks.filter(s => s.materialId === material.id).reduce((sum, s) => sum + s.quantity, 0);
+                    document.getElementById('stockOutCurrent').value = formatNumber(total);
+                }
+            });
+            
+            // 转移物料编码输入
+            document.getElementById('transferMaterialCode').addEventListener('blur', function() {
+                const code = this.value.trim();
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (material) {
+                    document.getElementById('transferMaterialName').value = material.name;
+                }
+            });
+            
+            // 确认入库
+            document.getElementById('confirmStockInBtn').addEventListener('click', function() {
+                const code = document.getElementById('stockInCode').value.trim();
+                const qty = parseInt(document.getElementById('stockInQty').value);
+                
+                if (!code || !qty) {
+                    showToast('请填写完整信�?, 'error');
+                    return;
+                }
+                
+                const materials = DB.get('materials');
+                let material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (!material) {
+                    showToast('物料不存�?, 'error');
+                    return;
+                }
+                
+                const stocks = DB.get('stocks');
+                const location = document.getElementById('stockInLocation').value || 'A-1';
+                const batch = document.getElementById('stockInBatch').value || `B${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
+                
+                const existingStock = stocks.find(s => s.materialId === material.id && s.location === location && s.batch === batch);
+                
+                if (existingStock) {
+                    existingStock.quantity += qty;
+                } else {
+                    stocks.push({
+                        id: Date.now(),
+                        materialId: material.id,
+                        materialCode: material.code,
+                        materialName: material.name,
+                        quantity: qty,
+                        location,
+                        warehouse: currentWarehouse,
+                        batch,
+                        inTime: new Date().toISOString()
+                    });
+                }
+                
+                DB.set('stocks', stocks);
+                showToast(`入库成功: ${material.name} x ${qty}`, 'success');
+                showPage('stockListPage');
+                updateStats();
+            });
+            
+            // 确认出库
+            document.getElementById('confirmStockOutBtn').addEventListener('click', function() {
+                const code = document.getElementById('stockOutCode').value.trim();
+                const qty = parseInt(document.getElementById('stockOutQty').value);
+                
+                if (!code || !qty) {
+                    showToast('请填写完整信�?, 'error');
+                    return;
+                }
+                
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (!material) {
+                    showToast('物料不存�?, 'error');
+                    return;
+                }
+                
+                const stocks = DB.get('stocks');
+                const stock = stocks.find(s => s.materialId === material.id);
+                
+                if (!stock || stock.quantity < qty) {
+                    showToast('库存不足', 'error');
+                    return;
+                }
+                
+                stock.quantity -= qty;
+                if (stock.quantity === 0) {
+                    const index = stocks.indexOf(stock);
+                    stocks.splice(index, 1);
+                }
+                
+                DB.set('stocks', stocks);
+                showToast(`出库成功: ${material.name} x ${qty}`, 'success');
+                showPage('stockListPage');
+                updateStats();
+            });
+            
+            // 确认转移
+            document.getElementById('confirmTransferBtn').addEventListener('click', function() {
+                const code = document.getElementById('transferMaterialCode').value.trim();
+                const fromLocation = document.getElementById('transferFromLocation').value;
+                const toLocation = document.getElementById('transferToLocation').value;
+                const qty = parseInt(document.getElementById('transferQty').value);
+                
+                if (!code || !fromLocation || !toLocation || !qty) {
+                    showToast('请填写完整信�?, 'error');
+                    return;
+                }
+                
+                if (fromLocation === toLocation) {
+                    showToast('原库位和目标库位不能相同', 'error');
+                    return;
+                }
+                
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code || m.barcode === code);
+                
+                if (!material) {
+                    showToast('物料不存�?, 'error');
+                    return;
+                }
+                
+                const stocks = DB.get('stocks');
+                const fromStock = stocks.find(s => s.materialId === material.id && s.location === fromLocation);
+                
+                if (!fromStock || fromStock.quantity < qty) {
+                    showToast('原库位库存不�?, 'error');
+                    return;
+                }
+                
+                fromStock.quantity -= qty;
+                
+                const toStock = stocks.find(s => s.materialId === material.id && s.location === toLocation);
+                if (toStock) {
+                    toStock.quantity += qty;
+                } else {
+                    stocks.push({
+                        id: Date.now(),
+                        materialId: material.id,
+                        materialCode: material.code,
+                        materialName: material.name,
+                        quantity: qty,
+                        location: toLocation,
+                        warehouse: currentWarehouse,
+                        batch: fromStock.batch,
+                        inTime: new Date().toISOString()
+                    });
+                }
+                
+                if (fromStock.quantity === 0) {
+                    const index = stocks.indexOf(fromStock);
+                    stocks.splice(index, 1);
+                }
+                
+                DB.set('stocks', stocks);
+                showToast('转移成功', 'success');
+                showPage('homePage');
+                updateStats();
+            });
+            
+            // 添加订单
+            document.getElementById('addOrderBtn').addEventListener('click', function() {
+                editingOrder = null;
+                document.getElementById('orderFormTitle').textContent = '新建订单';
+                document.querySelectorAll('#orderFormPage input, #orderFormPage textarea').forEach(el => el.value = '');
+                document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('orderItems').innerHTML = '';
+                document.getElementById('deleteOrderBtn').style.display = 'none';
+                showPage('orderFormPage');
+            });
+            
+            // 添加订单明细
+            document.getElementById('addOrderItemBtn').addEventListener('click', function() {
+                showModal('添加物料', `
+                    <div class="form-group">
+                        <label>物料编码</label>
+                        <input type="text" id="orderItemCode" placeholder="请输入物料编�?>
+                    </div>
+                    <div class="form-group">
+                        <label>数量</label>
+                        <input type="number" id="orderItemQty" value="1" min="1">
+                    </div>
+                    <button class="btn btn-success" onclick="addOrderItem()">添加</button>
+                `);
+            });
+            
+            // 保存订单
+            document.getElementById('saveOrderBtn').addEventListener('click', function() {
+                const customer = document.getElementById('orderCustomer').value.trim();
+                
+                if (!customer) {
+                    showToast('请填写客户名�?, 'error');
+                    return;
+                }
+                
+                const orders = DB.get('orders');
+                
+                if (editingOrder) {
+                    const index = orders.findIndex(o => o.id === editingOrder.id);
+                    orders[index] = {
+                        ...editingOrder,
+                        customer,
+                        remark: document.getElementById('orderRemark').value
+                    };
+                } else {
+                    const newOrder = {
+                        id: Date.now(),
+                        orderNo: document.getElementById('orderNo').value || `ORD${String(Date.now()).slice(-6)}`,
+                        customer,
+                        items: [],
+                        status: 'pending',
+                        createTime: new Date().toISOString(),
+                        warehouse: currentWarehouse,
+                        remark: document.getElementById('orderRemark').value
+                    };
+                    orders.push(newOrder);
+                }
+                
+                DB.set('orders', orders);
+                showToast('保存成功', 'success');
+                showPage('orderListPage');
+                updateStats();
+            });
+            
+            // 完成拣货
+            document.getElementById('completePickBtn').addEventListener('click', function() {
+                if (!currentPickOrder) return;
+                
+                const orders = DB.get('orders');
+                const index = orders.findIndex(o => o.id === currentPickOrder.id);
+                orders[index].status = 'completed';
+                DB.set('orders', orders);
+                
+                showToast('拣货完成', 'success');
+                showPage('pickListPage');
+                updateStats();
+            });
+            
+            // 模态框关闭
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            
+            // 搜索和筛�?
+            document.getElementById('materialSearch').addEventListener('input', () => { currentPage = 1; renderMaterialList(); });
+            document.getElementById('stockSearch').addEventListener('input', () => { currentPage = 1; renderStockList(); });
+            document.getElementById('orderSearch').addEventListener('input', () => { currentPage = 1; renderOrderList(); });
+            document.getElementById('barcodeSearch').addEventListener('input', renderBarcodeList);
+            document.getElementById('supplierSearch').addEventListener('input', () => { currentPage = 1; renderSupplierList(); });
+            
+            // 库位搜索
+            document.getElementById('stockInLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockInLocationSearch', 'stockInLocation'));
+            document.getElementById('stockOutLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockOutLocationSearch', 'stockOutLocation'));
+            document.getElementById('transferFromLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferFromLocationSearch', 'transferFromLocation'));
+            document.getElementById('transferToLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferToLocationSearch', 'transferToLocation'));
+            
+            // 筛选标�?
+            document.querySelectorAll('.filter-tabs').forEach(tabs => {
+                tabs.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('filter-tab')) {
+                        this.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        currentPage = 1;
+                        // 根据当前页面触发对应的渲染函�?
+                        if (document.getElementById('supplierListPage').style.display === 'block') {
+                            renderSupplierList();
+                        } else if (document.getElementById('materialListPage').style.display === 'block') {
+                            renderMaterialList();
+                        } else if (document.getElementById('stockListPage').style.display === 'block') {
+                            renderStockList();
+                        } else if (document.getElementById('orderListPage').style.display === 'block') {
+                            renderOrderList();
+                        }
+                    }
+                });
+            });
+            
+            // 添加供应�?
+            document.getElementById('addSupplierBtn').addEventListener('click', function() {
+                window.editingSupplier = null;
+                document.getElementById('supplierFormTitle').textContent = '添加供应�?;
+                document.getElementById('supplierCode').value = generateSupplierCode();
+                document.querySelectorAll('#supplierFormPage input, #supplierFormPage textarea').forEach(el => {
+                    if (el.id !== 'supplierCode') el.value = '';
+                });
+                document.getElementById('supplierStatus').value = 'active';
+                document.getElementById('supplierCreditLevel').value = 'B';
+                document.getElementById('deleteSupplierBtn').style.display = 'none';
+                showPage('supplierFormPage');
+            });
+            
+            // 保存供应�?
+            document.getElementById('saveSupplierBtn').addEventListener('click', function() {
+                const name = document.getElementById('supplierName').value.trim();
+                
+                if (!name) {
+                    showToast('请填写供应商名称', 'error');
+                    return;
+                }
+                
+                const suppliers = DB.get('suppliers');
+                
+                if (window.editingSupplier) {
+                    const index = suppliers.findIndex(s => s.id === window.editingSupplier.id);
+                    suppliers[index] = {
+                        ...window.editingSupplier,
+                        name,
+                        shortName: document.getElementById('supplierShortName').value,
+                        contact: document.getElementById('supplierContact').value,
+                        phone: document.getElementById('supplierPhone').value,
+                        email: document.getElementById('supplierEmail').value,
+                        address: document.getElementById('supplierAddress').value,
+                        bank: document.getElementById('supplierBank').value,
+                        bankAccount: document.getElementById('supplierBankAccount').value,
+                        taxNo: document.getElementById('supplierTaxNo').value,
+                        status: document.getElementById('supplierStatus').value,
+                        creditLevel: document.getElementById('supplierCreditLevel').value,
+                        products: document.getElementById('supplierProducts').value,
+                        remark: document.getElementById('supplierRemark').value
+                    };
+                } else {
+                    const newSupplier = {
+                        id: Date.now(),
+                        code: document.getElementById('supplierCode').value,
+                        name,
+                        shortName: document.getElementById('supplierShortName').value,
+                        contact: document.getElementById('supplierContact').value,
+                        phone: document.getElementById('supplierPhone').value,
+                        email: document.getElementById('supplierEmail').value,
+                        address: document.getElementById('supplierAddress').value,
+                        bank: document.getElementById('supplierBank').value,
+                        bankAccount: document.getElementById('supplierBankAccount').value,
+                        taxNo: document.getElementById('supplierTaxNo').value,
+                        status: document.getElementById('supplierStatus').value,
+                        creditLevel: document.getElementById('supplierCreditLevel').value,
+                        products: document.getElementById('supplierProducts').value,
+                        remark: document.getElementById('supplierRemark').value,
+                        createTime: new Date().toISOString()
+                    };
+                    suppliers.push(newSupplier);
+                }
+                
+                DB.set('suppliers', suppliers);
+                showToast('保存成功', 'success');
+                showPage('supplierListPage');
+                renderSupplierList();
+            });
+            
+            // 删除供应�?
+            document.getElementById('deleteSupplierBtn').addEventListener('click', function() {
+                if (!window.editingSupplier) return;
+                
+                if (confirm('确定要删除这个供应商吗？')) {
+                    const suppliers = DB.get('suppliers');
+                    const index = suppliers.findIndex(s => s.id === window.editingSupplier.id);
+                    suppliers.splice(index, 1);
+                    DB.set('suppliers', suppliers);
+                    
+                    showToast('删除成功', 'success');
+                    showPage('supplierListPage');
+                    renderSupplierList();
+                }
+            });
+        });
+        
+        // 添加订单明细
+        function addOrderItem() {
+            const code = document.getElementById('orderItemCode').value.trim();
+            const qty = parseInt(document.getElementById('orderItemQty').value);
+            
+            if (!code || !qty) {
+                showToast('请填写完整信�?, 'error');
+                return;
+            }
+            
+            const materials = DB.get('materials');
+            const material = materials.find(m => m.code === code);
+            
+            if (!material) {
+                showToast('物料不存�?, 'error');
+                return;
+            }
+            
+            if (!editingOrder) {
+                editingOrder = {
+                    items: []
+                };
+            }
+            
+            editingOrder.items.push({
+                materialId: material.id,
+                materialCode: material.code,
+                materialName: material.name,
+                quantity: qty,
+                pickedQty: 0
+            });
+            
+            renderOrderItems(editingOrder.items);
+            closeModal();
+        }
+    </script>
+</body>
+</html>
+  
+ 
+ 
