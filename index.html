@@ -882,6 +882,119 @@
         <div class="form-content" id="inventoryDetailContent"></div>
     </div>
 
+    <!-- 仓库表单页 -->
+    <div class="form-page" id="warehouseFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('warehousePage')">← 返回</span>
+            <h2 id="warehouseFormTitle">添加仓库</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>仓库编码 *</label>
+                <input type="text" id="warehouseCode" placeholder="请输入仓库编码">
+            </div>
+            <div class="form-group">
+                <label>仓库名称 *</label>
+                <input type="text" id="warehouseName" placeholder="请输入仓库名称">
+            </div>
+            <div class="form-group">
+                <label>地址</label>
+                <input type="text" id="warehouseAddress" placeholder="请输入仓库地址">
+            </div>
+            <div class="form-group">
+                <label>负责人</label>
+                <input type="text" id="warehouseManager" placeholder="请输入负责人姓名">
+            </div>
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" id="warehousePhone" placeholder="请输入联系电话">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="warehouseRemark" placeholder="请输入备注"></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveWarehouseBtn">保存</button>
+            <button class="btn btn-danger" id="deleteWarehouseBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 库位表单页 -->
+    <div class="form-page" id="locationFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('locationPage')">← 返回</span>
+            <h2 id="locationFormTitle">添加库位</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>库位编码 *</label>
+                <input type="text" id="locationCode" placeholder="请输入库位编码">
+            </div>
+            <div class="form-group">
+                <label>库位名称 *</label>
+                <input type="text" id="locationName" placeholder="请输入库位名称">
+            </div>
+            <div class="form-group">
+                <label>所属仓库</label>
+                <select id="locationWarehouse">
+                    <option value="warehouse1">仓库A</option>
+                    <option value="warehouse2">仓库B</option>
+                    <option value="warehouse3">仓库C</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="locationRemark" placeholder="请输入备注"></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveLocationBtn">保存</button>
+            <button class="btn btn-danger" id="deleteLocationBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
+    <!-- 用户表单页 -->
+    <div class="form-page" id="userFormPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('userPage')">← 返回</span>
+            <h2 id="userFormTitle">添加用户</h2>
+            <span></span>
+        </div>
+        <div class="form-content">
+            <div class="form-group">
+                <label>用户名 *</label>
+                <input type="text" id="userUsername" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="userName" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+                <label>密码 *</label>
+                <input type="password" id="userPassword" placeholder="请输入密码">
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select id="userRole">
+                    <option value="admin">超级管理员</option>
+                    <option value="manager">管理员</option>
+                    <option value="operator">操作员</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="userRemark" placeholder="请输入备注"></textarea>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-success" id="saveUserBtn">保存</button>
+            <button class="btn btn-danger" id="deleteUserBtn" style="display:none;">删除</button>
+        </div>
+    </div>
+
     <!-- 模态框 -->
     <div class="modal" id="modal">
         <div class="modal-content">
