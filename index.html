@@ -2938,8 +2938,8 @@
                     return;
                 }
 
-                if (code.length !== 4) {
-                    showToast('库位编码必须是4位', 'error');
+                if (code.length < 4 || code.length > 10) {
+                    showToast('库位编码长度无效', 'error');
                     return;
                 }
 
