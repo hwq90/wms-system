@@ -1058,13 +1058,17 @@
             // 初始化仓库 - 清空现有数据，只保留添加功能
             DB.set('warehouses', []);
 
-            // 初始化库位
+            // 初始化库位 - 4位编码格式
             if (!DB.get('locations').length) {
                 const locations = [];
                 for (let i = 1; i <= 10; i++) {
-                    locations.push({ id: `A-${i}`, code: `A-${i}`, name: `A区${i}号`, warehouse: 'warehouse1' });
-                    locations.push({ id: `B-${i}`, code: `B-${i}`, name: `B区${i}号`, warehouse: 'warehouse1' });
-                    locations.push({ id: `C-${i}`, code: `C-${i}`, name: `C区${i}号`, warehouse: 'warehouse1' });
+                    const rowNum = String(i).padStart(2, '0');
+                    locations.push({ id: `A-${rowNum}01`, code: `A-${rowNum}01`, name: `A区${i}排01号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `A-${rowNum}02`, code: `A-${rowNum}02`, name: `A区${i}排02号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `B-${rowNum}01`, code: `B-${rowNum}01`, name: `B区${i}排01号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `B-${rowNum}02`, code: `B-${rowNum}02`, name: `B区${i}排02号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `C-${rowNum}01`, code: `C-${rowNum}01`, name: `C区${i}排01号`, warehouse: 'warehouse1' });
+                    locations.push({ id: `C-${rowNum}02`, code: `C-${rowNum}02`, name: `C区${i}排02号`, warehouse: 'warehouse1' });
                 }
                 DB.set('locations', locations);
             }
