@@ -299,6 +299,7 @@
             <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
             <h2>物料管理</h2>
             <span class="header-btn" id="addMaterialBtn">+ 添加</span>
+            <span class="header-btn" id="batchDeleteMaterialBtn" style="background:#ff6b6b;">批量删除</span>
         </div>
         <div class="search-box" style="display:flex;gap:10px;">
             <button class="btn btn-small" onclick="exportMaterialTemplate()" style="flex:1;">📥模板</button>
@@ -1252,8 +1253,9 @@
                     const stock = stocks.filter(s => s.materialId === m.id).reduce((sum, s) => sum + s.quantity, 0);
                     const stockClass = stock < m.safetyStock ? 'danger' : 'success';
                     return `
-                        <div class="list-item" onclick="editMaterial(${m.id})">
-                            <div class="list-item-row">
+                        <div class="list-item">
+                            <div class="list-item-row" style="display:flex;align-items:center;">
+                                <input type="checkbox" class="material-checkbox" data-id="${m.id}" style="margin-right:10px;">
                                 <span class="list-item-label">编码</span>
                                 <span class="list-item-value">${m.code}</span>
                             </div>
@@ -1268,6 +1270,10 @@
                             <div class="list-item-row">
                                 <span class="list-item-label">库存</span>
                                 <span class="list-item-value ${stockClass}">${formatNumber(stock)} ${m.unit || ''}</span>
+                            </div>
+                            <div class="list-item-actions">
+                                <span class="list-item-action" onclick="editMaterial(${m.id})">编辑</span>
+                                <span class="list-item-action" onclick="deleteSingleMaterial(${m.id})">删除</span>
                             </div>
                         </div>
                     `;
@@ -1331,6 +1337,26 @@
             document.getElementById('deleteMaterialBtn').style.display = 'block';
             
             showPage('materialFormPage');
+        }
+
+        // 单独删除物料
+        function deleteSingleMaterial(id) {
+            if (!confirm('确定要删除这个物料吗？')) return;
+            
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            
+            // 删除物料
+            const newMaterials = materials.filter(m => m.id !== id);
+            DB.set('materials', newMaterials);
+            
+            // 删除相关库存记录
+            const newStocks = stocks.filter(s => s.materialId !== id);
+            DB.set('stocks', newStocks);
+            
+            showToast('删除成功', 'success');
+            renderMaterialList();
+            updateStats();
         }
 
         // 渲染库存列表
@@ -2477,6 +2503,34 @@
                 document.getElementById('materialMaxStock').value = 1000;
                 document.getElementById('deleteMaterialBtn').style.display = 'none';
                 showPage('materialFormPage');
+            });
+
+            // 批量删除物料
+            document.getElementById('batchDeleteMaterialBtn').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.material-checkbox:checked');
+                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+                
+                if (ids.length === 0) {
+                    showToast('请选择要删除的物料', 'error');
+                    return;
+                }
+                
+                if (confirm(`确定要删除选中的 ${ids.length} 个物料吗？`)) {
+                    const materials = DB.get('materials');
+                    const stocks = DB.get('stocks');
+                    
+                    // 删除物料
+                    const newMaterials = materials.filter(m => !ids.includes(m.id));
+                    DB.set('materials', newMaterials);
+                    
+                    // 删除相关库存记录
+                    const newStocks = stocks.filter(s => !ids.includes(s.materialId));
+                    DB.set('stocks', newStocks);
+                    
+                    showToast(`已删除 ${ids.length} 个物料`, 'success');
+                    renderMaterialList();
+                    updateStats();
+                }
             });
 
             // 添加仓库
