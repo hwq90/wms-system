@@ -149,11 +149,11 @@
             <div class="login-subtitle">V5.0 完整版</div>
             <div class="input-group">
                 <label>用户名</label>
-                <input type="text" id="username" placeholder="请输入用户名" value="hwq90">
+                <input type="text" id="username" placeholder="请输入用户名">
             </div>
             <div class="input-group">
                 <label>密码</label>
-                <input type="password" id="password" placeholder="请输入密码" value="568394">
+                <input type="password" id="password" placeholder="请输入密码">
             </div>
             <div class="input-group">
                 <label>角色</label>
@@ -284,6 +284,10 @@
                     <div class="module-icon">🏢</div>
                     <div class="module-text">供应商</div>
                 </div>
+                <div class="module-item" id="moduleInventory">
+                    <div class="module-icon">📋</div>
+                    <div class="module-text">盘点</div>
+                </div>
             </div>
         </div>
     </div>
@@ -294,6 +298,12 @@
             <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
             <h2>物料管理</h2>
             <span class="header-btn" id="addMaterialBtn">+ 添加</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportMaterialTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('materialImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportMaterialList()" style="flex:1;">📤导出</button>
+            <input type="file" id="materialImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importMaterialList(this)">
         </div>
         <div class="search-box">
             <input type="text" class="search-input" id="materialSearch" placeholder="搜索物料编码/名称...">
@@ -404,7 +414,14 @@
                 <input type="number" id="stockInQty" placeholder="请输入数量" min="1">
             </div>
             <div class="form-group">
+                <label>供应商</label>
+                <select id="stockInSupplier">
+                    <option value="">请选择供应商（可选）</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>库位</label>
+                <input type="text" id="stockInLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
                 <select id="stockInLocation">
                     <option value="">请选择库位</option>
                 </select>
@@ -458,7 +475,14 @@
                 <input type="number" id="stockOutQty" placeholder="请输入数量" min="1">
             </div>
             <div class="form-group">
+                <label>供应商（退货时选择）</label>
+                <select id="stockOutSupplier">
+                    <option value="">请选择供应商（可选）</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>库位</label>
+                <input type="text" id="stockOutLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
                 <select id="stockOutLocation">
                     <option value="">请选择库位</option>
                 </select>
@@ -501,17 +525,25 @@
                     <label>物料名称</label>
                     <input type="text" id="transferMaterialName" readonly style="background:#f5f5f5;">
                 </div>
+                <div class="form-group">
+                    <label>供应商</label>
+                    <select id="transferSupplier">
+                        <option value="">请选择供应商（可选）</option>
+                    </select>
+                </div>
             </div>
             <div class="mobile-step">
                 <div class="step-title">步骤2: 选择库位</div>
                 <div class="form-group">
                     <label>原库位</label>
+                    <input type="text" id="transferFromLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
                     <select id="transferFromLocation">
                         <option value="">请选择原库位</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>目标库位</label>
+                    <input type="text" id="transferToLocationSearch" placeholder="搜索库位..." style="margin-bottom:8px;">
                     <select id="transferToLocation">
                         <option value="">请选择目标库位</option>
                     </select>
@@ -596,6 +628,12 @@
             <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
             <h2>智能拣货</h2>
             <span class="header-btn" id="manualOutBtn">手动出库</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportPickTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('pickImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportPickList()" style="flex:1;">📤导出</button>
+            <input type="file" id="pickImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importPickList(this)">
         </div>
         <div class="filter-tabs" id="pickFilter">
             <div class="filter-tab active" data-filter="pending">待拣货</div>
@@ -682,6 +720,12 @@
             <h2>库位管理</h2>
             <span class="header-btn" id="addLocationBtn">+ 添加</span>
         </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportLocationTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('locationImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportLocationList()" style="flex:1;">📤导出</button>
+            <input type="file" id="locationImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importLocationList(this)">
+        </div>
         <div class="list-content" id="locationList"></div>
     </div>
 
@@ -711,6 +755,12 @@
             <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
             <h2>供应商管理</h2>
             <span class="header-btn" id="addSupplierBtn">+ 添加</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small" onclick="exportSupplierTemplate()" style="flex:1;">📥模板</button>
+            <button class="btn btn-small btn-success" onclick="document.getElementById('supplierImportInput').click()" style="flex:1;">📤导入</button>
+            <button class="btn btn-small btn-warning" onclick="exportSupplierList()" style="flex:1;">📤导出</button>
+            <input type="file" id="supplierImportInput" accept=".xlsx,.xls" style="display:none;" onchange="importSupplierList(this)">
         </div>
         <div class="search-box">
             <input type="text" class="search-input" id="supplierSearch" placeholder="搜索供应商编码/名称...">
@@ -803,6 +853,34 @@
         </div>
     </div>
 
+    <!-- 盘点页面 -->
+    <div class="list-page" id="inventoryPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
+            <h2>库存盘点</h2>
+            <span class="header-btn" id="startInventoryBtn">+ 新建盘点</span>
+        </div>
+        <div class="search-box" style="display:flex;gap:10px;">
+            <button class="btn btn-small btn-warning" onclick="exportInventoryList()" style="flex:1;">📤导出盘点表</button>
+        </div>
+        <div class="filter-tabs" id="inventoryFilter">
+            <div class="filter-tab active" data-filter="all">全部</div>
+            <div class="filter-tab" data-filter="pending">待盘点</div>
+            <div class="filter-tab" data-filter="completed">已完成</div>
+        </div>
+        <div class="list-content" id="inventoryList"></div>
+    </div>
+
+    <!-- 盘点详情页 -->
+    <div class="form-page" id="inventoryDetailPage">
+        <div class="list-header">
+            <span class="back-btn" onclick="showPage('inventoryPage')">← 返回</span>
+            <h2>盘点详情</h2>
+            <span class="header-btn" id="completeInventoryBtn">完成盘点</span>
+        </div>
+        <div class="form-content" id="inventoryDetailContent"></div>
+    </div>
+
     <!-- 模态框 -->
     <div class="modal" id="modal">
         <div class="modal-content">
@@ -851,23 +929,13 @@
 
         // 初始化数据
         function initData() {
-            // 初始化用户
-            if (!DB.get('users').length) {
-                DB.set('users', [
-                    { id: 1, username: 'hwq90', password: '568394', role: 'admin', name: '超级管理员' },
-                    { id: 2, username: 'manager', password: '123456', role: 'manager', name: '管理员' },
-                    { id: 3, username: 'operator', password: '123456', role: 'operator', name: '操作员' }
-                ]);
-            }
+            // 初始化用户 - 只保留超级管理员hwq
+            DB.set('users', [
+                { id: 1, username: 'hwq', password: '568394', role: 'admin', name: '超级管理员' }
+            ]);
             
-            // 初始化仓库
-            if (!DB.get('warehouses').length) {
-                DB.set('warehouses', [
-                    { id: 'warehouse1', code: 'CK-A', name: '仓库A', address: '一楼', manager: '张三' },
-                    { id: 'warehouse2', code: 'CK-B', name: '仓库B', address: '二楼', manager: '李四' },
-                    { id: 'warehouse3', code: 'CK-C', name: '仓库C', address: '三楼', manager: '王五' }
-                ]);
-            }
+            // 初始化仓库 - 清空现有数据，只保留添加功能
+            DB.set('warehouses', []);
             
             // 初始化库位
             if (!DB.get('locations').length) {
@@ -1722,6 +1790,408 @@
             document.getElementById('transferFromLocation').innerHTML = '<option value="">请选择原库位</option>' + options;
             document.getElementById('transferToLocation').innerHTML = '<option value="">请选择目标库位</option>' + options;
         }
+        
+        // 库位搜索过滤
+        function filterLocationSelect(searchInputId, selectId) {
+            const search = document.getElementById(searchInputId).value.toLowerCase();
+            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
+            const filtered = locations.filter(l => 
+                l.code.toLowerCase().includes(search) || 
+                l.name.toLowerCase().includes(search)
+            );
+            const options = filtered.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
+            document.getElementById(selectId).innerHTML = '<option value="">请选择库位</option>' + options;
+        }
+        
+        // 初始化供应商选择
+        function initSupplierSelect() {
+            const suppliers = DB.get('suppliers').filter(s => s.status === 'active');
+            const options = suppliers.map(s => `<option value="${s.code}">${s.code} - ${s.name}</option>`).join('');
+            
+            document.getElementById('stockInSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+            document.getElementById('stockOutSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+            document.getElementById('transferSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
+        }
+
+        // ========== 盘点功能 ==========
+        function renderInventoryList() {
+            const inventories = DB.get('inventories') || [];
+            const filter = document.querySelector('#inventoryFilter .filter-tab.active')?.dataset.filter || 'all';
+            
+            let filtered = inventories.filter(i => {
+                if (filter === 'pending') return i.status === 'pending';
+                if (filter === 'completed') return i.status === 'completed';
+                return true;
+            });
+            
+            const container = document.getElementById('inventoryList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>暂无盘点记录</div></div>';
+            } else {
+                container.innerHTML = filtered.map(i => `
+                    <div class="list-item" onclick="showInventoryDetail(${i.id})">
+                        <div class="list-item-row">
+                            <span class="list-item-label">盘点单号</span>
+                            <span class="list-item-value">${i.code}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">状态</span>
+                            <span class="list-item-value ${i.status === 'completed' ? 'success' : 'warning'}">${i.status === 'completed' ? '已完成' : '待盘点'}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">盘点时间</span>
+                            <span class="list-item-value">${i.createTime || '-'}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function createNewInventory() {
+            const inventories = DB.get('inventories') || [];
+            const newInv = {
+                id: Date.now(),
+                code: `INV${String(Date.now()).slice(-6)}`,
+                status: 'pending',
+                items: [],
+                createTime: new Date().toLocaleString(),
+                warehouse: currentWarehouse
+            };
+            
+            // 添加所有物料到盘点列表
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            
+            materials.forEach(m => {
+                const stock = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse).reduce((sum, s) => sum + s.quantity, 0);
+                newInv.items.push({
+                    materialId: m.id,
+                    materialCode: m.code,
+                    materialName: m.name,
+                    systemQty: stock,
+                    actualQty: 0,
+                    diff: -stock,
+                    location: ''
+                });
+            });
+            
+            inventories.push(newInv);
+            DB.set('inventories', inventories);
+            showInventoryDetail(newInv.id);
+        }
+        
+        function showInventoryDetail(id) {
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === id);
+            if (!inv) return;
+            
+            window.currentInventory = inv;
+            
+            const content = document.getElementById('inventoryDetailContent');
+            content.innerHTML = `
+                <div class="mobile-step">
+                    <div class="step-title">盘点单: ${inv.code}</div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">状态</span>
+                        <span class="list-item-value ${inv.status === 'completed' ? 'success' : 'warning'}">${inv.status === 'completed' ? '已完成' : '待盘点'}</span>
+                    </div>
+                </div>
+                <div class="mobile-step">
+                    <div class="step-title">盘点明细</div>
+                    <div id="inventoryItems"></div>
+                </div>
+            `;
+            
+            renderInventoryItems(inv);
+            showPage('inventoryDetailPage');
+        }
+        
+        function renderInventoryItems(inv) {
+            const container = document.getElementById('inventoryItems');
+            container.innerHTML = inv.items.map((item, idx) => `
+                <div class="list-item">
+                    <div class="list-item-row">
+                        <span class="list-item-label">物料</span>
+                        <span class="list-item-value">${item.materialCode} ${item.materialName}</span>
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">系统库存</span>
+                        <span class="list-item-value">${item.systemQty}</span>
+                    </div>
+                    <div class="form-group">
+                        <label>实盘数量</label>
+                        <input type="number" id="actualQty_${idx}" value="${item.actualQty || 0}" min="0" onchange="updateInventoryItem(${idx}, this.value)">
+                    </div>
+                    <div class="list-item-row">
+                        <span class="list-item-label">差异</span>
+                        <span class="list-item-value ${item.diff > 0 ? 'success' : (item.diff < 0 ? 'danger' : '')}">${item.diff}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateInventoryItem(idx, actualQty) {
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === window.currentInventory.id);
+            if (!inv) return;
+            
+            inv.items[idx].actualQty = parseInt(actualQty) || 0;
+            inv.items[idx].diff = inv.items[idx].actualQty - inv.items[idx].systemQty;
+            DB.set('inventories', inventories);
+            renderInventoryItems(inv);
+        }
+        
+        function completeCurrentInventory() {
+            if (!window.currentInventory) return;
+            
+            const inventories = DB.get('inventories');
+            const inv = inventories.find(i => i.id === window.currentInventory.id);
+            if (!inv) return;
+            
+            inv.status = 'completed';
+            DB.set('inventories', inventories);
+            
+            // 更新库存
+            const stocks = DB.get('stocks');
+            inv.items.forEach(item => {
+                if (item.diff !== 0) {
+                    const stock = stocks.find(s => s.materialId === item.materialId && s.warehouse === currentWarehouse);
+                    if (stock) {
+                        stock.quantity = item.actualQty;
+                    }
+                }
+            });
+            DB.set('stocks', stocks);
+            
+            showToast('盘点完成', 'success');
+            showPage('inventoryPage');
+            renderInventoryList();
+        }
+        
+        function exportInventoryList() {
+            const stocks = DB.get('stocks');
+            const materials = DB.get('materials');
+            const locations = DB.get('locations');
+            
+            let data = [['物料编码', '物料名称', '库位', '系统库存']];
+            
+            materials.forEach(m => {
+                const stockList = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse);
+                stockList.forEach(s => {
+                    const loc = locations.find(l => l.code === s.location);
+                    data.push([m.code, m.name, s.location || '-', s.quantity]);
+                });
+            });
+            
+            downloadCSV(data, '库存盘点表.csv');
+            showToast('导出成功', 'success');
+        }
+
+        // ========== Excel导入导出功能 ==========
+        function downloadCSV(data, filename) {
+            let csv = data.map(row => row.join(',')).join('\n');
+            const BOM = '\uFEFF';
+            csv = BOM + csv;
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+        
+        function exportMaterialTemplate() {
+            const data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库存']];
+            data.push(['MAT0001', '示例物料', '规格A', '个', '10.00', 'A类', '10', '100']);
+            downloadCSV(data, '物料模板.csv');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportMaterialList() {
+            const materials = DB.get('materials');
+            let data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库存']];
+            materials.forEach(m => {
+                data.push([m.code, m.name, m.spec || '', m.unit || '', m.price || '', m.category || '', m.safetyStock || 0, m.maxStock || 0]);
+            });
+            downloadCSV(data, '物料列表.csv');
+            showToast('导出成功', 'success');
+        }
+        
+        function importMaterialList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift(); // 去掉表头
+                
+                const materials = DB.get('materials');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        materials.push({
+                            id: Date.now() + count,
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            spec: row[2]?.trim() || '',
+                            unit: row[3]?.trim() || '个',
+                            price: parseFloat(row[4]) || 0,
+                            category: row[5]?.trim() || '',
+                            safetyStock: parseInt(row[6]) || 10,
+                            maxStock: parseInt(row[7]) || 1000
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('materials', materials);
+                showToast(`导入成功${count}条`, 'success');
+                renderMaterialList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+        
+        function exportLocationTemplate() {
+            const data = [['库位编码', '库位名称', '仓库']];
+            data.push(['A-01', 'A区1号', 'warehouse1']);
+            downloadCSV(data, '库位模板.csv');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportLocationList() {
+            const locations = DB.get('locations');
+            const warehouses = DB.get('warehouses');
+            let data = [['库位编码', '库位名称', '仓库ID']];
+            locations.forEach(l => {
+                const wh = warehouses.find(w => w.id === l.warehouse);
+                data.push([l.code, l.name, wh?.name || l.warehouse]);
+            });
+            downloadCSV(data, '库位列表.csv');
+            showToast('导出成功', 'success');
+        }
+        
+        function importLocationList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift();
+                
+                const locations = DB.get('locations');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        locations.push({
+                            id: row[0].trim() + '_' + Date.now(),
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            warehouse: row[2]?.trim() || currentWarehouse
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('locations', locations);
+                showToast(`导入成功${count}条`, 'success');
+                renderLocationList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+        
+        function exportPickTemplate() {
+            const data = [['订单号', '客户名称']];
+            data.push(['ORD000001', '示例客户']);
+            downloadCSV(data, '拣货模板.csv');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportPickList() {
+            const orders = DB.get('orders').filter(o => o.status !== 'completed');
+            let data = [['订单号', '客户', '状态', '创建时间']];
+            orders.forEach(o => {
+                const statusText = o.status === 'pending' ? '待拣货' : (o.status === 'picking' ? '拣货中' : '已完成');
+                data.push([o.orderNo, o.customer, statusText, o.createTime || '-']);
+            });
+            downloadCSV(data, '拣货列表.csv');
+            showToast('导出成功', 'success');
+        }
+        
+        function importPickList(input) {
+            showToast('拣货导入功能开发中', 'warning');
+            input.value = '';
+        }
+        
+        // 供应商导入导出
+        function exportSupplierTemplate() {
+            const data = [['供应商编码', '供应商名称', '简称', '联系人', '电话', '邮箱', '地址', '开户银行', '银行账号', '税号', '信用等级', '主营产品', '备注']];
+            data.push(['SUP001', '华东物资有限公司', '华东物资', '张经理', '021-12345678', 'huadong@163.com', '上海市浦东新区张江路123号', '中国工商银行', '6222021234567890', '91310000MAE1234567', 'A', '钢材,水泥,木材', '优质供应商']);
+            downloadCSV(data, '供应商模板.csv');
+            showToast('模板下载成功', 'success');
+        }
+        
+        function exportSupplierList() {
+            const suppliers = DB.get('suppliers');
+            let data = [['供应商编码', '供应商名称', '简称', '联系人', '电话', '邮箱', '地址', '开户银行', '银行账号', '税号', '合作状态', '信用等级', '主营产品', '备注']];
+            suppliers.forEach(s => {
+                data.push([s.code, s.name, s.shortName || '', s.contact || '', s.phone || '', s.email || '', s.address || '', s.bank || '', s.bankAccount || '', s.taxNo || '', s.status === 'active' ? '合作中' : '已停用', s.creditLevel || '', s.products || '', s.remark || '']);
+            });
+            downloadCSV(data, '供应商列表.csv');
+            showToast('导出成功', 'success');
+        }
+        
+        function importSupplierList(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(row => row.split(','));
+                rows.shift();
+                
+                const suppliers = DB.get('suppliers');
+                let count = 0;
+                
+                rows.forEach(row => {
+                    if (row.length >= 2 && row[0] && row[1]) {
+                        suppliers.push({
+                            id: Date.now() + count,
+                            code: row[0].trim(),
+                            name: row[1].trim(),
+                            shortName: row[2]?.trim() || '',
+                            contact: row[3]?.trim() || '',
+                            phone: row[4]?.trim() || '',
+                            email: row[5]?.trim() || '',
+                            address: row[6]?.trim() || '',
+                            bank: row[7]?.trim() || '',
+                            bankAccount: row[8]?.trim() || '',
+                            taxNo: row[9]?.trim() || '',
+                            status: 'active',
+                            creditLevel: row[10]?.trim() || 'B',
+                            products: row[11]?.trim() || '',
+                            remark: row[12]?.trim() || '',
+                            createTime: new Date().toISOString()
+                        });
+                        count++;
+                    }
+                });
+                
+                DB.set('suppliers', suppliers);
+                showToast(`导入成功${count}条`, 'success');
+                renderSupplierList();
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
 
         // 事件绑定
         document.addEventListener('DOMContentLoaded', function() {
@@ -1737,8 +2207,8 @@
                 const users = DB.get('users');
                 const user = users.find(u => u.username === username && u.password === password);
                 
-                if (user || (username === 'hwq90' && password === '568394')) {
-                    currentUser = user || { username: 'hwq90', role: 'admin', name: '超级管理员' };
+                if (user || (username === 'hwq' && password === '568394')) {
+                    currentUser = user || { username: 'hwq', role: 'admin', name: '超级管理员' };
                     document.getElementById('currentUser').textContent = currentUser.username;
                     document.getElementById('currentRole').textContent = { admin: '超级管理员', manager: '管理员', operator: '操作员' }[currentUser.role];
                     
@@ -1747,6 +2217,7 @@
                     
                     updateStats();
                     initLocationSelect();
+                    initSupplierSelect();
                 } else {
                     showToast('用户名或密码错误', 'error');
                 }
@@ -1806,6 +2277,20 @@
                 currentPage = 1;
                 showPage('supplierListPage');
                 renderSupplierList();
+            });
+            document.getElementById('moduleInventory').addEventListener('click', () => {
+                showPage('inventoryPage');
+                renderInventoryList();
+            });
+            
+            // 新建盘点
+            document.getElementById('startInventoryBtn').addEventListener('click', function() {
+                createNewInventory();
+            });
+            
+            // 完成盘点
+            document.getElementById('completeInventoryBtn').addEventListener('click', function() {
+                completeCurrentInventory();
             });
             
             // 添加物料
@@ -2167,6 +2652,12 @@
             document.getElementById('barcodeSearch').addEventListener('input', renderBarcodeList);
             document.getElementById('supplierSearch').addEventListener('input', () => { currentPage = 1; renderSupplierList(); });
             
+            // 库位搜索
+            document.getElementById('stockInLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockInLocationSearch', 'stockInLocation'));
+            document.getElementById('stockOutLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockOutLocationSearch', 'stockOutLocation'));
+            document.getElementById('transferFromLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferFromLocationSearch', 'transferFromLocation'));
+            document.getElementById('transferToLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferToLocationSearch', 'transferToLocation'));
+            
             // 筛选标签
             document.querySelectorAll('.filter-tabs').forEach(tabs => {
                 tabs.addEventListener('click', function(e) {
@@ -2314,5 +2805,6 @@
     </script>
 </body>
 </html>
-   
+  
+ 
  
