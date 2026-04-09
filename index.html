@@ -1017,6 +1017,9 @@
         let pageSize = 20;
         let editingMaterial = null;
         let editingOrder = null;
+        let editingWarehouse = null;
+        let editingLocation = null;
+        let editingUser = null;
         let currentPickOrder = null;
         let currentPickItem = 0;
 
@@ -1668,7 +1671,7 @@
             
             const container = document.getElementById('warehouseList');
             container.innerHTML = warehouses.map(w => `
-                <div class="list-item">
+                <div class="list-item" onclick="editWarehouse(${w.id})">
                     <div class="list-item-row">
                         <span class="list-item-label">编码</span>
                         <span class="list-item-value">${w.code}</span>
@@ -1679,14 +1682,32 @@
                     </div>
                     <div class="list-item-row">
                         <span class="list-item-label">地址</span>
-                        <span class="list-item-value">${w.address}</span>
+                        <span class="list-item-value">${w.address || '-'}</span>
                     </div>
                     <div class="list-item-row">
                         <span class="list-item-label">负责人</span>
-                        <span class="list-item-value">${w.manager}</span>
+                        <span class="list-item-value">${w.manager || '-'}</span>
                     </div>
                 </div>
             `).join('');
+        }
+
+        // 编辑仓库
+        function editWarehouse(id) {
+            const warehouses = DB.get('warehouses');
+            const warehouse = warehouses.find(w => w.id === id);
+            if (!warehouse) return;
+            
+            editingWarehouse = warehouse;
+            document.getElementById('warehouseFormTitle').textContent = '编辑仓库';
+            document.getElementById('warehouseCode').value = warehouse.code;
+            document.getElementById('warehouseName').value = warehouse.name;
+            document.getElementById('warehouseAddress').value = warehouse.address || '';
+            document.getElementById('warehouseManager').value = warehouse.manager || '';
+            document.getElementById('warehousePhone').value = warehouse.phone || '';
+            document.getElementById('warehouseRemark').value = warehouse.remark || '';
+            document.getElementById('deleteWarehouseBtn').style.display = 'inline-block';
+            showPage('warehouseFormPage');
         }
 
         // 渲染库位列表
@@ -1695,7 +1716,7 @@
             
             const container = document.getElementById('locationList');
             container.innerHTML = locations.map(l => `
-                <div class="list-item" onclick="showLocationBarcode('${l.id}')">
+                <div class="list-item" onclick="editLocation(${l.id})">
                     <div class="list-item-row">
                         <span class="list-item-label">编码</span>
                         <span class="list-item-value">${l.code}</span>
@@ -1706,6 +1727,22 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // 编辑库位
+        function editLocation(id) {
+            const locations = DB.get('locations');
+            const location = locations.find(l => l.id === id);
+            if (!location) return;
+            
+            editingLocation = location;
+            document.getElementById('locationFormTitle').textContent = '编辑库位';
+            document.getElementById('locationCode').value = location.code;
+            document.getElementById('locationName').value = location.name;
+            document.getElementById('locationWarehouse').value = location.warehouse || '';
+            document.getElementById('locationRemark').value = location.remark || '';
+            document.getElementById('deleteLocationBtn').style.display = 'inline-block';
+            showPage('locationFormPage');
         }
 
         // 显示库位条形码
@@ -1728,14 +1765,14 @@
             
             const container = document.getElementById('userList');
             container.innerHTML = users.map(u => `
-                <div class="list-item">
+                <div class="list-item" onclick="editUser(${u.id})">
                     <div class="list-item-row">
                         <span class="list-item-label">用户名</span>
                         <span class="list-item-value">${u.username}</span>
                     </div>
                     <div class="list-item-row">
                         <span class="list-item-label">姓名</span>
-                        <span class="list-item-value">${u.name}</span>
+                        <span class="list-item-value">${u.name || '-'}</span>
                     </div>
                     <div class="list-item-row">
                         <span class="list-item-label">角色</span>
@@ -1743,6 +1780,23 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // 编辑用户
+        function editUser(id) {
+            const users = DB.get('users');
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            editingUser = user;
+            document.getElementById('userFormTitle').textContent = '编辑用户';
+            document.getElementById('userUsername').value = user.username;
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userPassword').value = user.password;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('userRemark').value = user.remark || '';
+            document.getElementById('deleteUserBtn').style.display = 'inline-block';
+            showPage('userFormPage');
         }
 
         // 渲染预警列表
@@ -1895,6 +1949,13 @@
         }
 
         // 初始化库位选择
+        // 初始化库位仓库选择
+        function initLocationWarehouseSelect() {
+            const warehouses = DB.get('warehouses');
+            const options = warehouses.map(w => `<option value="${w.code}">${w.code} - ${w.name}</option>`).join('');
+            document.getElementById('locationWarehouse').innerHTML = '<option value="">请选择仓库</option>' + options;
+        }
+
         function initLocationSelect() {
             const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
             const options = locations.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
@@ -2417,6 +2478,34 @@
                 document.getElementById('deleteMaterialBtn').style.display = 'none';
                 showPage('materialFormPage');
             });
+
+            // 添加仓库
+            document.getElementById('addWarehouseBtn').addEventListener('click', function() {
+                editingWarehouse = null;
+                document.getElementById('warehouseFormTitle').textContent = '添加仓库';
+                document.querySelectorAll('#warehouseFormPage input, #warehouseFormPage textarea').forEach(el => el.value = '');
+                document.getElementById('deleteWarehouseBtn').style.display = 'none';
+                showPage('warehouseFormPage');
+            });
+
+            // 添加库位
+            document.getElementById('addLocationBtn').addEventListener('click', function() {
+                editingLocation = null;
+                document.getElementById('locationFormTitle').textContent = '添加库位';
+                document.querySelectorAll('#locationFormPage input, #locationFormPage select').forEach(el => el.value = '');
+                initLocationWarehouseSelect();
+                document.getElementById('deleteLocationBtn').style.display = 'none';
+                showPage('locationFormPage');
+            });
+
+            // 添加用户
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                editingUser = null;
+                document.getElementById('userFormTitle').textContent = '添加用户';
+                document.querySelectorAll('#userFormPage input, #userFormPage select').forEach(el => el.value = '');
+                document.getElementById('deleteUserBtn').style.display = 'none';
+                showPage('userFormPage');
+            });
             
             // 保存物料
             document.getElementById('saveMaterialBtn').addEventListener('click', function() {
@@ -2483,6 +2572,176 @@
                     showToast('删除成功', 'success');
                     showPage('materialListPage');
                     updateStats();
+                }
+            });
+
+            // 保存仓库
+            document.getElementById('saveWarehouseBtn').addEventListener('click', function() {
+                const code = document.getElementById('warehouseCode').value.trim();
+                const name = document.getElementById('warehouseName').value.trim();
+                
+                if (!code || !name) {
+                    showToast('请填写仓库编码和名称', 'error');
+                    return;
+                }
+                
+                const warehouses = DB.get('warehouses');
+                
+                if (editingWarehouse) {
+                    const index = warehouses.findIndex(w => w.id === editingWarehouse.id);
+                    warehouses[index] = {
+                        ...editingWarehouse,
+                        code,
+                        name,
+                        address: document.getElementById('warehouseAddress').value,
+                        manager: document.getElementById('warehouseManager').value,
+                        phone: document.getElementById('warehousePhone').value,
+                        remark: document.getElementById('warehouseRemark').value
+                    };
+                } else {
+                    warehouses.push({
+                        id: Date.now(),
+                        code,
+                        name,
+                        address: document.getElementById('warehouseAddress').value,
+                        manager: document.getElementById('warehouseManager').value,
+                        phone: document.getElementById('warehousePhone').value,
+                        remark: document.getElementById('warehouseRemark').value
+                    });
+                }
+                
+                DB.set('warehouses', warehouses);
+                showToast('保存成功', 'success');
+                showPage('warehousePage');
+                renderWarehouseList();
+            });
+
+            // 删除仓库
+            document.getElementById('deleteWarehouseBtn').addEventListener('click', function() {
+                if (!editingWarehouse) return;
+                
+                if (confirm('确定要删除这个仓库吗？')) {
+                    const warehouses = DB.get('warehouses');
+                    const index = warehouses.findIndex(w => w.id === editingWarehouse.id);
+                    warehouses.splice(index, 1);
+                    DB.set('warehouses', warehouses);
+                    
+                    showToast('删除成功', 'success');
+                    showPage('warehousePage');
+                    renderWarehouseList();
+                }
+            });
+
+            // 保存库位
+            document.getElementById('saveLocationBtn').addEventListener('click', function() {
+                const code = document.getElementById('locationCode').value.trim();
+                const name = document.getElementById('locationName').value.trim();
+                
+                if (!code || !name) {
+                    showToast('请填写库位编码和名称', 'error');
+                    return;
+                }
+                
+                if (code.length !== 4) {
+                    showToast('库位编码必须是4位', 'error');
+                    return;
+                }
+                
+                const locations = DB.get('locations');
+                
+                if (editingLocation) {
+                    const index = locations.findIndex(l => l.id === editingLocation.id);
+                    locations[index] = {
+                        ...editingLocation,
+                        code,
+                        name,
+                        warehouse: document.getElementById('locationWarehouse').value,
+                        remark: document.getElementById('locationRemark').value
+                    };
+                } else {
+                    locations.push({
+                        id: Date.now(),
+                        code,
+                        name,
+                        warehouse: document.getElementById('locationWarehouse').value,
+                        remark: document.getElementById('locationRemark').value
+                    });
+                }
+                
+                DB.set('locations', locations);
+                showToast('保存成功', 'success');
+                showPage('locationPage');
+                renderLocationList();
+            });
+
+            // 删除库位
+            document.getElementById('deleteLocationBtn').addEventListener('click', function() {
+                if (!editingLocation) return;
+                
+                if (confirm('确定要删除这个库位吗？')) {
+                    const locations = DB.get('locations');
+                    const index = locations.findIndex(l => l.id === editingLocation.id);
+                    locations.splice(index, 1);
+                    DB.set('locations', locations);
+                    
+                    showToast('删除成功', 'success');
+                    showPage('locationPage');
+                    renderLocationList();
+                }
+            });
+
+            // 保存用户
+            document.getElementById('saveUserBtn').addEventListener('click', function() {
+                const username = document.getElementById('userUsername').value.trim();
+                const password = document.getElementById('userPassword').value.trim();
+                
+                if (!username || !password) {
+                    showToast('请填写用户名和密码', 'error');
+                    return;
+                }
+                
+                const users = DB.get('users');
+                
+                if (editingUser) {
+                    const index = users.findIndex(u => u.id === editingUser.id);
+                    users[index] = {
+                        ...editingUser,
+                        username,
+                        password,
+                        name: document.getElementById('userName').value,
+                        role: document.getElementById('userRole').value,
+                        remark: document.getElementById('userRemark').value
+                    };
+                } else {
+                    users.push({
+                        id: Date.now(),
+                        username,
+                        password,
+                        name: document.getElementById('userName').value,
+                        role: document.getElementById('userRole').value,
+                        remark: document.getElementById('userRemark').value
+                    });
+                }
+                
+                DB.set('users', users);
+                showToast('保存成功', 'success');
+                showPage('userPage');
+                renderUserList();
+            });
+
+            // 删除用户
+            document.getElementById('deleteUserBtn').addEventListener('click', function() {
+                if (!editingUser) return;
+                
+                if (confirm('确定要删除这个用户吗？')) {
+                    const users = DB.get('users');
+                    const index = users.findIndex(u => u.id === editingUser.id);
+                    users.splice(index, 1);
+                    DB.set('users', users);
+                    
+                    showToast('删除成功', 'success');
+                    showPage('userPage');
+                    renderUserList();
                 }
             });
             
