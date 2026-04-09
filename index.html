@@ -742,6 +742,14 @@
             <span class="header-btn" id="batchDeleteUserBtn" style="background:#ff6b6b;">批量删除</span>
         </div>
         <div class="list-content" id="userList"></div>
+        <!-- 超级管理员设置 -->
+        <div id="adminSettings" style="padding:15px;">
+            <div class="mobile-step">
+                <div class="step-title">超级管理员设置</div>
+                <button class="btn btn-danger" id="deleteAllDataBtn" style="width:100%;">⚠️ 一键清空所有数据</button>
+                <p style="color:#999;font-size:12px;margin-top:10px;">此操作将删除所有物料、库存、订单、供应商等数据，仅保留用户账户。此操作不可恢复！</p>
+            </div>
+        </div>
     </div>
 
     <!-- 预警列表页 -->
@@ -2765,6 +2773,34 @@
                     showToast(`已删除 ${ids.length} 个用户`, 'success');
                     renderUserList();
                 }
+            });
+
+            // 超级管理员一键清空所有数据
+            document.getElementById('deleteAllDataBtn').addEventListener('click', function() {
+                if (currentUser?.role !== 'admin') {
+                    showToast('只有超级管理员才能执行此操作', 'error');
+                    return;
+                }
+
+                if (!confirm('⚠️ 确定要清空所有数据吗？此操作不可恢复！')) {
+                    return;
+                }
+
+                if (!confirm('⚠️ 再次确认：这将删除所有物料、库存、订单、供应商、仓库、库位数据！')) {
+                    return;
+                }
+
+                // 清空所有数据，仅保留用户
+                DB.set('materials', []);
+                DB.set('stocks', []);
+                DB.set('orders', []);
+                DB.set('suppliers', []);
+                DB.set('warehouses', []);
+                DB.set('locations', []);
+                DB.set('inventories', []);
+
+                showToast('所有数据已清空', 'success');
+                updateStats();
             });
 
             // 保存物料
