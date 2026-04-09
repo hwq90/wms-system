@@ -721,6 +721,7 @@
             <span class="back-btn" onclick="showPage('homePage')">← 返回</span>
             <h2>库位管理</h2>
             <span class="header-btn" id="addLocationBtn">+ 添加</span>
+            <span class="header-btn" id="batchDeleteLocationBtn" style="background:#ff6b6b;">批量删除</span>
         </div>
         <div class="search-box" style="display:flex;gap:10px;">
             <button class="btn btn-small" onclick="exportLocationTemplate()" style="flex:1;">📥模板</button>
@@ -931,8 +932,8 @@
         </div>
         <div class="form-content">
             <div class="form-group">
-                <label>库位编码 *</label>
-                <input type="text" id="locationCode" placeholder="请输入库位编码">
+                <label>库位编码 *（4位数字）</label>
+                <input type="text" id="locationCode" placeholder="请输入4位库位编码，如0101" maxlength="4">
             </div>
             <div class="form-group">
                 <label>库位名称 *</label>
@@ -1326,6 +1327,37 @@
             document.getElementById('materialFormTitle').textContent = '编辑物料';
             document.getElementById('materialCode').value = material.code;
             document.getElementById('materialName').value = material.name;
+            document.getElementById('materialSpec').value = material.spec || '';
+            document.getElementById('materialUnit').value = material.unit || '';
+            document.getElementById('materialPrice').value = material.price || '';
+            document.getElementById('materialCategory').value = material.category || '';
+            document.getElementById('materialSafetyStock').value = material.safetyStock || 10;
+            document.getElementById('materialMaxStock').value = material.maxStock || 1000;
+            document.getElementById('materialBarcode').value = material.barcode || '';
+            document.getElementById('materialRemark').value = material.remark || '';
+            document.getElementById('deleteMaterialBtn').style.display = 'inline-block';
+            showPage('materialFormPage');
+        }
+
+        // 删除单个物料
+        function deleteSingleMaterial(id) {
+            if (!confirm('确定要删除这个物料吗？')) return;
+            
+            const materials = DB.get('materials');
+            const stocks = DB.get('stocks');
+            
+            // 删除物料
+            const newMaterials = materials.filter(m => m.id !== id);
+            DB.set('materials', newMaterials);
+            
+            // 删除相关库存记录
+            const newStocks = stocks.filter(s => s.materialId !== id);
+            DB.set('stocks', newStocks);
+            
+            showToast('删除成功', 'success');
+            renderMaterialList();
+            updateStats();
+        }
             document.getElementById('materialSpec').value = material.spec || '';
             document.getElementById('materialUnit').value = material.unit || '';
             document.getElementById('materialPrice').value = material.price || '';
@@ -1742,14 +1774,19 @@
             
             const container = document.getElementById('locationList');
             container.innerHTML = locations.map(l => `
-                <div class="list-item" onclick="editLocation(${l.id})">
-                    <div class="list-item-row">
+                <div class="list-item">
+                    <div class="list-item-row" style="display:flex;align-items:center;">
+                        <input type="checkbox" class="location-checkbox" data-id="${l.id}" style="margin-right:10px;">
                         <span class="list-item-label">编码</span>
                         <span class="list-item-value">${l.code}</span>
                     </div>
                     <div class="list-item-row">
                         <span class="list-item-label">名称</span>
                         <span class="list-item-value">${l.name}</span>
+                    </div>
+                    <div class="list-item-actions">
+                        <span class="list-item-action" onclick="editLocation(${l.id})">编辑</span>
+                        <span class="list-item-action" onclick="deleteSingleLocation(${l.id})">删除</span>
                     </div>
                 </div>
             `).join('');
@@ -1782,6 +1819,35 @@
             generateBarcode(location.code);
             
             showPage('barcodeDetailPage');
+        }
+
+        // 删除单个库位
+        function deleteSingleLocation(id) {
+            if (!confirm('确定要删除这个库位吗？')) return;
+            
+            const locations = DB.get('locations');
+            const location = locations.find(l => l.id === id);
+            if (!location) return;
+            
+            const stocks = DB.get('stocks');
+            const hasStock = stocks.filter(s => s.location === location.code).length > 0;
+            
+            if (hasStock) {
+                if (!confirm('该库位有库存记录，删除后将清空这些库存，是否继续？')) {
+                    return;
+                }
+            }
+            
+            // 删除库位
+            const newLocations = locations.filter(l => l.id !== id);
+            DB.set('locations', newLocations);
+            
+            // 删除相关库存记录
+            const newStocks = stocks.filter(s => s.location !== location.code);
+            DB.set('stocks', newStocks);
+            
+            showToast('删除成功', 'success');
+            renderLocationList();
         }
 
         // 渲染用户列表
@@ -2550,6 +2616,47 @@
                 initLocationWarehouseSelect();
                 document.getElementById('deleteLocationBtn').style.display = 'none';
                 showPage('locationFormPage');
+            });
+
+            // 批量删除库位
+            document.getElementById('batchDeleteLocationBtn').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.location-checkbox:checked');
+                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+                
+                if (ids.length === 0) {
+                    showToast('请选择要删除的库位', 'error');
+                    return;
+                }
+                
+                if (confirm(`确定要删除选中的 ${ids.length} 个库位吗？`)) {
+                    const locations = DB.get('locations');
+                    const stocks = DB.get('stocks');
+                    
+                    // 检查库位是否有库存
+                    const hasStock = locations.filter(l => ids.includes(l.id)).some(l => {
+                        return stocks.filter(s => s.location === l.code).length > 0;
+                    });
+                    
+                    if (hasStock) {
+                        if (!confirm('部分库位有库存记录，删除后将清空这些库存，是否继续？')) {
+                            return;
+                        }
+                    }
+                    
+                    // 删除库位
+                    const newLocations = locations.filter(l => !ids.includes(l.id));
+                    DB.set('locations', newLocations);
+                    
+                    // 删除相关库存记录
+                    const newStocks = stocks.filter(s => {
+                        const locationCodes = locations.filter(l => ids.includes(l.id)).map(l => l.code);
+                        return !locationCodes.includes(s.location);
+                    });
+                    DB.set('stocks', newStocks);
+                    
+                    showToast(`已删除 ${ids.length} 个库位`, 'success');
+                    renderLocationList();
+                }
             });
 
             // 添加用户
