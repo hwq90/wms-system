@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- Cache bust: 2026-04-09 12:40 -->
+    <!-- Cache bust: 2026-04-09 12:51 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WMS仓库管理系统 V5.2</title>
@@ -79,6 +79,8 @@
         .list-item-value.success { color: #52c41a; }
         .list-item-value.warning { color: #faad14; }
         .list-item-value.danger { color: #ff4d4f; }
+        .list-item-actions { display: flex; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .list-item-action { color: #667eea; font-size: 13px; cursor: pointer; }
 
         .form-page { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f5f5; z-index: 100; overflow-y: auto; }
         .form-content { padding: 15px; padding-bottom: 100px; }
@@ -161,7 +163,7 @@
                 <select id="role">
                     <option value="operator">操作员</option>
                     <option value="manager">管理员</option>
-                    <option value="admin" selected>超级管理员</option>
+                    <option value="admin" selected="">超级管理员</option>
                 </select>
             </div>
             <button class="btn" id="loginBtn">登录</button>
@@ -181,8 +183,8 @@
                     </select>
                 </div>
                 <div class="user-info">
-                    <span id="currentUser">hwq90</span>
-                    <span class="user-role" id="currentRole">超级管理员</span>
+                    <span id="currentUser">-</span>
+                    <span class="user-role" id="currentRole">-</span>
                 </div>
                 <div class="header-btn" id="logoutBtn">退出</div>
             </div>
@@ -409,7 +411,7 @@
             </div>
             <div class="form-group">
                 <label>物料名称</label>
-                <input type="text" id="stockInName" readonly style="background:#f5f5f5;">
+                <input type="text" id="stockInName" readonly="" style="background:#f5f5f5;">
             </div>
             <div class="form-group">
                 <label>入库数量 *</label>
@@ -466,11 +468,11 @@
             </div>
             <div class="form-group">
                 <label>物料名称</label>
-                <input type="text" id="stockOutName" readonly style="background:#f5f5f5;">
+                <input type="text" id="stockOutName" readonly="" style="background:#f5f5f5;">
             </div>
             <div class="form-group">
                 <label>当前库存</label>
-                <input type="text" id="stockOutCurrent" readonly style="background:#f5f5f5;">
+                <input type="text" id="stockOutCurrent" readonly="" style="background:#f5f5f5;">
             </div>
             <div class="form-group">
                 <label>出库数量 *</label>
@@ -525,7 +527,7 @@
                 </div>
                 <div class="form-group">
                     <label>物料名称</label>
-                    <input type="text" id="transferMaterialName" readonly style="background:#f5f5f5;">
+                    <input type="text" id="transferMaterialName" readonly="" style="background:#f5f5f5;">
                 </div>
                 <div class="form-group">
                     <label>供应商</label>
@@ -695,7 +697,7 @@
                 <label>标签尺寸</label>
                 <select id="barcodeSize">
                     <option value="small">小 (50x25mm)</option>
-                    <option value="medium" selected>中 (70x35mm)</option>
+                    <option value="medium" selected="">中 (70x35mm)</option>
                     <option value="large">大 (100x50mm)</option>
                 </select>
             </div>
@@ -797,7 +799,7 @@
         <div class="form-content">
             <div class="form-group">
                 <label>内部供应商编码 *</label>
-                <input type="text" id="supplierCode" placeholder="留空自动生成" readonly style="background:#f5f5f5;">
+                <input type="text" id="supplierCode" placeholder="留空自动生成" readonly="" style="background:#f5f5f5;">
             </div>
             <div class="form-group">
                 <label>供应商名称 *</label>
@@ -1056,9 +1058,9 @@
             }
         };
 
-        // 初始化数据
+        // 初始化数据 - 修改版：只创建超级管理员hwq，不自动创建管理员和操作员
         function initData() {
-            // 初始化用户 - 只保留超级管理员hwq
+            // 初始化用户 - 只保留超级管理员hwq/568394
             DB.set('users', [
                 { id: 1, username: 'hwq', password: '568394', role: 'admin', name: '超级管理员' }
             ]);
@@ -1311,24 +1313,27 @@
 
             let html = '';
             if (currentPage > 1) {
-                html += `<span class="page-btn" onclick="changePage(${currentPage - 1}, ${callback.toString()})">上一页</span>`;
+                html += `<span class="page-btn" onclick="changePage(${currentPage - 1})">上一页</span>`;
             }
 
             for (let i = 1; i <= totalPages && i <= 5; i++) {
-                html += `<span class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i}, ${callback.toString()})">${i}</span>`;
+                html += `<span class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</span>`;
             }
 
             if (currentPage < totalPages) {
-                html += `<span class="page-btn" onclick="changePage(${currentPage + 1}, ${callback.toString()})">下一页</span>`;
+                html += `<span class="page-btn" onclick="changePage(${currentPage + 1})">下一页</span>`;
             }
 
             container.innerHTML = html;
         }
 
         // 切换页码
-        function changePage(page, callback) {
+        function changePage(page) {
             currentPage = page;
-            callback();
+            if (document.getElementById('materialListPage').style.display === 'block') renderMaterialList();
+            if (document.getElementById('stockListPage').style.display === 'block') renderStockList();
+            if (document.getElementById('orderListPage').style.display === 'block') renderOrderList();
+            if (document.getElementById('supplierListPage').style.display === 'block') renderSupplierList();
         }
 
         // 编辑物料
@@ -1354,38 +1359,6 @@
         }
 
         // 删除单个物料
-        function deleteSingleMaterial(id) {
-            if (!confirm('确定要删除这个物料吗？')) return;
-
-            const materials = DB.get('materials');
-            const stocks = DB.get('stocks');
-
-            // 删除物料
-            const newMaterials = materials.filter(m => m.id !== id);
-            DB.set('materials', newMaterials);
-
-            // 删除相关库存记录
-            const newStocks = stocks.filter(s => s.materialId !== id);
-            DB.set('stocks', newStocks);
-
-            showToast('删除成功', 'success');
-            renderMaterialList();
-            updateStats();
-        }
-            document.getElementById('materialSpec').value = material.spec || '';
-            document.getElementById('materialUnit').value = material.unit || '';
-            document.getElementById('materialPrice').value = material.price || '';
-            document.getElementById('materialCategory').value = material.category || '';
-            document.getElementById('materialSafetyStock').value = material.safetyStock || 10;
-            document.getElementById('materialMaxStock').value = material.maxStock || 1000;
-            document.getElementById('materialBarcode').value = material.barcode || '';
-            document.getElementById('materialRemark').value = material.remark || '';
-            document.getElementById('deleteMaterialBtn').style.display = 'block';
-
-            showPage('materialFormPage');
-        }
-
-        // 单独删除物料
         function deleteSingleMaterial(id) {
             if (!confirm('确定要删除这个物料吗？')) return;
 
@@ -2022,42 +1995,33 @@
             if (paged.length === 0) {
                 container.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div>暂无供应商</div></div>';
             } else {
-                container.innerHTML = paged.map(s => {
-                    const statusClass = s.status === 'active' ? 'success' : 'warning';
-                    const statusText = s.status === 'active' ? '合作中' : '已停用';
-                    const creditClass = s.creditLevel === 'A' ? 'success' : s.creditLevel === 'B' ? 'warning' : 'danger';
-                    return `
-                        <div class="list-item" onclick="editSupplier(${s.id})">
-                            <div class="list-item-row">
-                                <span class="list-item-label">编码</span>
-                                <span class="list-item-value">${s.code}</span>
-                            </div>
-                            <div class="list-item-row">
-                                <span class="list-item-label">名称</span>
-                                <span class="list-item-value">${s.name}</span>
-                            </div>
-                            <div class="list-item-row">
-                                <span class="list-item-label">联系人</span>
-                                <span class="list-item-value">${s.contact || '-'}</span>
-                            </div>
-                            <div class="list-item-row">
-                                <span class="list-item-label">电话</span>
-                                <span class="list-item-value">${s.phone || '-'}</span>
-                            </div>
-                            <div class="list-item-row">
-                                <span class="list-item-label">状态</span>
-                                <span class="list-item-value ${statusClass}">${statusText}</span>
-                            </div>
-                            <div class="list-item-row">
-                                <span class="list-item-label">信用等级</span>
-                                <span class="list-item-value ${creditClass}">${s.creditLevel}级</span>
-                            </div>
+                container.innerHTML = paged.map(s => `
+                    <div class="list-item" onclick="editSupplier(${s.id})">
+                        <div class="list-item-row" style="display:flex;align-items:center;">
+                            <input type="checkbox" class="supplier-checkbox" data-id="${s.id}" style="margin-right:10px;">
+                            <span class="list-item-label">编码</span>
+                            <span class="list-item-value">${s.code}</span>
                         </div>
-                    `;
-                }).join('');
+                        <div class="list-item-row">
+                            <span class="list-item-label">名称</span>
+                            <span class="list-item-value">${s.name}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">联系人</span>
+                            <span class="list-item-value">${s.contact || '-'} ${s.phone || ''}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">状态</span>
+                            <span class="list-item-value ${s.status === 'active' ? 'success' : 'warning'}">${s.status === 'active' ? '合作中' : '已停用'}</span>
+                        </div>
+                        <div class="list-item-actions">
+                            <span class="list-item-action" onclick="event.stopPropagation();editSupplier(${s.id})">编辑</span>
+                            <span class="list-item-action" onclick="event.stopPropagation();deleteSingleSupplier(${s.id})">删除</span>
+                        </div>
+                    </div>
+                `).join('');
             }
 
-            // 渲染分页
             renderPagination('supplierPagination', filtered.length, () => renderSupplierList());
         }
 
@@ -2079,64 +2043,33 @@
             document.getElementById('supplierBankAccount').value = supplier.bankAccount || '';
             document.getElementById('supplierTaxNo').value = supplier.taxNo || '';
             document.getElementById('supplierStatus').value = supplier.status || 'active';
-            document.getElementById('supplierCreditLevel').value = supplier.creditLevel || 'B';
+            document.getElementById('supplierCreditLevel').value = supplier.creditLevel || 'A';
             document.getElementById('supplierProducts').value = supplier.products || '';
             document.getElementById('supplierRemark').value = supplier.remark || '';
-
-            window.editingSupplier = supplier;
-            document.getElementById('deleteSupplierBtn').style.display = currentUser?.role === 'admin' ? 'block' : 'none';
+            document.getElementById('deleteSupplierBtn').style.display = 'inline-block';
             showPage('supplierFormPage');
         }
 
-        // 初始化库位选择
-        // 初始化库位仓库选择
-        function initLocationWarehouseSelect() {
-            const warehouses = DB.get('warehouses');
-            const options = warehouses.map(w => `<option value="${w.code}">${w.code} - ${w.name}</option>`).join('');
-            document.getElementById('locationWarehouse').innerHTML = '<option value="">请选择仓库</option>' + options;
+        // 删除单个供应商
+        function deleteSingleSupplier(id) {
+            if (!confirm('确定要删除这个供应商吗？')) return;
+
+            const suppliers = DB.get('suppliers');
+            const newSuppliers = suppliers.filter(s => s.id !== id);
+            DB.set('suppliers', newSuppliers);
+
+            showToast('删除成功', 'success');
+            renderSupplierList();
         }
 
-        function initLocationSelect() {
-            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
-            const options = locations.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
-
-            document.getElementById('stockInLocation').innerHTML = '<option value="">请选择库位</option>' + options;
-            document.getElementById('stockOutLocation').innerHTML = '<option value="">请选择库位</option>' + options;
-            document.getElementById('transferFromLocation').innerHTML = '<option value="">请选择原库位</option>' + options;
-            document.getElementById('transferToLocation').innerHTML = '<option value="">请选择目标库位</option>' + options;
-        }
-
-        // 库位搜索过滤
-        function filterLocationSelect(searchInputId, selectId) {
-            const search = document.getElementById(searchInputId).value.toLowerCase();
-            const locations = DB.get('locations').filter(l => l.warehouse === currentWarehouse);
-            const filtered = locations.filter(l =>
-                l.code.toLowerCase().includes(search) ||
-                l.name.toLowerCase().includes(search)
-            );
-            const options = filtered.map(l => `<option value="${l.code}">${l.code} - ${l.name}</option>`).join('');
-            document.getElementById(selectId).innerHTML = '<option value="">请选择库位</option>' + options;
-        }
-
-        // 初始化供应商选择
-        function initSupplierSelect() {
-            const suppliers = DB.get('suppliers').filter(s => s.status === 'active');
-            const options = suppliers.map(s => `<option value="${s.code}">${s.code} - ${s.name}</option>`).join('');
-
-            document.getElementById('stockInSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
-            document.getElementById('stockOutSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
-            document.getElementById('transferSupplier').innerHTML = '<option value="">请选择供应商（可选）</option>' + options;
-        }
-
-        // ========== 盘点功能 ==========
+        // 渲染盘点列表
         function renderInventoryList() {
             const inventories = DB.get('inventories') || [];
             const filter = document.querySelector('#inventoryFilter .filter-tab.active')?.dataset.filter || 'all';
 
-            let filtered = inventories.filter(i => {
-                if (filter === 'pending') return i.status === 'pending';
-                if (filter === 'completed') return i.status === 'completed';
-                return true;
+            const filtered = inventories.filter(i => {
+                if (filter === 'all') return true;
+                return i.status === filter;
             });
 
             const container = document.getElementById('inventoryList');
@@ -2155,401 +2088,150 @@
                         </div>
                         <div class="list-item-row">
                             <span class="list-item-label">盘点时间</span>
-                            <span class="list-item-value">${i.createTime || '-'}</span>
+                            <span class="list-item-value">${i.createTime}</span>
                         </div>
                     </div>
                 `).join('');
             }
         }
 
-        function createNewInventory() {
-            const inventories = DB.get('inventories') || [];
-            const newInv = {
-                id: Date.now(),
-                code: `INV${String(Date.now()).slice(-6)}`,
-                status: 'pending',
-                items: [],
-                createTime: new Date().toLocaleString(),
-                warehouse: currentWarehouse
-            };
-
-            // 添加所有物料到盘点列表
-            const materials = DB.get('materials');
-            const stocks = DB.get('stocks');
-
-            materials.forEach(m => {
-                const stock = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse).reduce((sum, s) => sum + s.quantity, 0);
-                newInv.items.push({
-                    materialId: m.id,
-                    materialCode: m.code,
-                    materialName: m.name,
-                    systemQty: stock,
-                    actualQty: 0,
-                    diff: -stock,
-                    location: ''
-                });
-            });
-
-            inventories.push(newInv);
-            DB.set('inventories', inventories);
-            showInventoryDetail(newInv.id);
-        }
-
-        function showInventoryDetail(id) {
-            const inventories = DB.get('inventories');
-            const inv = inventories.find(i => i.id === id);
-            if (!inv) return;
-
-            window.currentInventory = inv;
-
-            const content = document.getElementById('inventoryDetailContent');
-            content.innerHTML = `
-                <div class="mobile-step">
-                    <div class="step-title">盘点单: ${inv.code}</div>
-                    <div class="list-item-row">
-                        <span class="list-item-label">状态</span>
-                        <span class="list-item-value ${inv.status === 'completed' ? 'success' : 'warning'}">${inv.status === 'completed' ? '已完成' : '待盘点'}</span>
-                    </div>
-                </div>
-                <div class="mobile-step">
-                    <div class="step-title">盘点明细</div>
-                    <div id="inventoryItems"></div>
-                </div>
-            `;
-
-            renderInventoryItems(inv);
-            showPage('inventoryDetailPage');
-        }
-
-        function renderInventoryItems(inv) {
-            const container = document.getElementById('inventoryItems');
-            container.innerHTML = inv.items.map((item, idx) => `
-                <div class="list-item">
-                    <div class="list-item-row">
-                        <span class="list-item-label">物料</span>
-                        <span class="list-item-value">${item.materialCode} ${item.materialName}</span>
-                    </div>
-                    <div class="list-item-row">
-                        <span class="list-item-label">系统库存</span>
-                        <span class="list-item-value">${item.systemQty}</span>
-                    </div>
-                    <div class="form-group">
-                        <label>实盘数量</label>
-                        <input type="number" id="actualQty_${idx}" value="${item.actualQty || 0}" min="0" onchange="updateInventoryItem(${idx}, this.value)">
-                    </div>
-                    <div class="list-item-row">
-                        <span class="list-item-label">差异</span>
-                        <span class="list-item-value ${item.diff > 0 ? 'success' : (item.diff < 0 ? 'danger' : '')}">${item.diff}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateInventoryItem(idx, actualQty) {
-            const inventories = DB.get('inventories');
-            const inv = inventories.find(i => i.id === window.currentInventory.id);
-            if (!inv) return;
-
-            inv.items[idx].actualQty = parseInt(actualQty) || 0;
-            inv.items[idx].diff = inv.items[idx].actualQty - inv.items[idx].systemQty;
-            DB.set('inventories', inventories);
-            renderInventoryItems(inv);
-        }
-
-        function completeCurrentInventory() {
-            if (!window.currentInventory) return;
-
-            const inventories = DB.get('inventories');
-            const inv = inventories.find(i => i.id === window.currentInventory.id);
-            if (!inv) return;
-
-            inv.status = 'completed';
-            DB.set('inventories', inventories);
-
-            // 更新库存
-            const stocks = DB.get('stocks');
-            inv.items.forEach(item => {
-                if (item.diff !== 0) {
-                    const stock = stocks.find(s => s.materialId === item.materialId && s.warehouse === currentWarehouse);
-                    if (stock) {
-                        stock.quantity = item.actualQty;
-                    }
-                }
-            });
-            DB.set('stocks', stocks);
-
-            showToast('盘点完成', 'success');
-            showPage('inventoryPage');
-            renderInventoryList();
-        }
-
-        function exportInventoryList() {
-            const stocks = DB.get('stocks');
-            const materials = DB.get('materials');
-            const locations = DB.get('locations');
-
-            let data = [['物料编码', '物料名称', '库位', '系统库存']];
-
-            materials.forEach(m => {
-                const stockList = stocks.filter(s => s.materialId === m.id && s.warehouse === currentWarehouse);
-                stockList.forEach(s => {
-                    const loc = locations.find(l => l.code === s.location);
-                    data.push([m.code, m.name, s.location || '-', s.quantity]);
-                });
-            });
-
-            downloadCSV(data, '库存盘点表.csv');
-            showToast('导出成功', 'success');
-        }
-
-        // ========== Excel导入导出功能 ==========
-        function downloadCSV(data, filename) {
-            let csv = data.map(row => row.join(',')).join('\n');
-            const BOM = '\uFEFF';
-            csv = BOM + csv;
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-        }
-
-        function exportMaterialTemplate() {
-            const data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库存']];
-            data.push(['MAT0001', '示例物料', '规格A', '个', '10.00', 'A类', '10', '100']);
-            downloadCSV(data, '物料模板.csv');
-            showToast('模板下载成功', 'success');
-        }
-
-        function exportMaterialList() {
-            const materials = DB.get('materials');
-            let data = [['物料编码', '物料名称', '规格', '单位', '单价', '类别', '安全库存', '最大库存']];
-            materials.forEach(m => {
-                data.push([m.code, m.name, m.spec || '', m.unit || '', m.price || '', m.category || '', m.safetyStock || 0, m.maxStock || 0]);
-            });
-            downloadCSV(data, '物料列表.csv');
-            showToast('导出成功', 'success');
-        }
-
-        function importMaterialList(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').map(row => row.split(','));
-                rows.shift(); // 去掉表头
-
-                const materials = DB.get('materials');
-                let count = 0;
-
-                rows.forEach(row => {
-                    if (row.length >= 2 && row[0] && row[1]) {
-                        materials.push({
-                            id: Date.now() + count,
-                            code: row[0].trim(),
-                            name: row[1].trim(),
-                            spec: row[2]?.trim() || '',
-                            unit: row[3]?.trim() || '个',
-                            price: parseFloat(row[4]) || 0,
-                            category: row[5]?.trim() || '',
-                            safetyStock: parseInt(row[6]) || 10,
-                            maxStock: parseInt(row[7]) || 1000
-                        });
-                        count++;
-                    }
-                });
-
-                DB.set('materials', materials);
-                showToast(`导入成功${count}条`, 'success');
-                renderMaterialList();
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        function exportLocationTemplate() {
-            const data = [['库位编码', '库位名称', '仓库']];
-            data.push(['A-01', 'A区1号', 'warehouse1']);
-            downloadCSV(data, '库位模板.csv');
-            showToast('模板下载成功', 'success');
-        }
-
-        function exportLocationList() {
-            const locations = DB.get('locations');
-            const warehouses = DB.get('warehouses');
-            let data = [['库位编码', '库位名称', '仓库ID']];
-            locations.forEach(l => {
-                const wh = warehouses.find(w => w.id === l.warehouse);
-                data.push([l.code, l.name, wh?.name || l.warehouse]);
-            });
-            downloadCSV(data, '库位列表.csv');
-            showToast('导出成功', 'success');
-        }
-
-        function importLocationList(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').map(row => row.split(','));
-                rows.shift();
-
-                const locations = DB.get('locations');
-                let count = 0;
-
-                rows.forEach(row => {
-                    if (row.length >= 2 && row[0] && row[1]) {
-                        locations.push({
-                            id: row[0].trim() + '_' + Date.now(),
-                            code: row[0].trim(),
-                            name: row[1].trim(),
-                            warehouse: row[2]?.trim() || currentWarehouse
-                        });
-                        count++;
-                    }
-                });
-
-                DB.set('locations', locations);
-                showToast(`导入成功${count}条`, 'success');
-                renderLocationList();
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        function exportPickTemplate() {
-            const data = [['订单号', '客户名称']];
-            data.push(['ORD000001', '示例客户']);
-            downloadCSV(data, '拣货模板.csv');
-            showToast('模板下载成功', 'success');
-        }
-
-        function exportPickList() {
-            const orders = DB.get('orders').filter(o => o.status !== 'completed');
-            let data = [['订单号', '客户', '状态', '创建时间']];
-            orders.forEach(o => {
-                const statusText = o.status === 'pending' ? '待拣货' : (o.status === 'picking' ? '拣货中' : '已完成');
-                data.push([o.orderNo, o.customer, statusText, o.createTime || '-']);
-            });
-            downloadCSV(data, '拣货列表.csv');
-            showToast('导出成功', 'success');
-        }
-
-        function importPickList(input) {
-            showToast('拣货导入功能开发中', 'warning');
-            input.value = '';
-        }
-
-        // 供应商导入导出
-        function exportSupplierTemplate() {
-            const data = [['供应商编码', '供应商名称', '简称', '联系人', '电话', '邮箱', '地址', '开户银行', '银行账号', '税号', '信用等级', '主营产品', '备注']];
-            data.push(['SUP001', '华东物资有限公司', '华东物资', '张经理', '021-12345678', 'huadong@163.com', '上海市浦东新区张江路123号', '中国工商银行', '6222021234567890', '91310000MAE1234567', 'A', '钢材,水泥,木材', '优质供应商']);
-            downloadCSV(data, '供应商模板.csv');
-            showToast('模板下载成功', 'success');
-        }
-
-        function exportSupplierList() {
-            const suppliers = DB.get('suppliers');
-            let data = [['供应商编码', '供应商名称', '简称', '联系人', '电话', '邮箱', '地址', '开户银行', '银行账号', '税号', '合作状态', '信用等级', '主营产品', '备注']];
-            suppliers.forEach(s => {
-                data.push([s.code, s.name, s.shortName || '', s.contact || '', s.phone || '', s.email || '', s.address || '', s.bank || '', s.bankAccount || '', s.taxNo || '', s.status === 'active' ? '合作中' : '已停用', s.creditLevel || '', s.products || '', s.remark || '']);
-            });
-            downloadCSV(data, '供应商列表.csv');
-            showToast('导出成功', 'success');
-        }
-
-        function importSupplierList(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').map(row => row.split(','));
-                rows.shift();
-
-                const suppliers = DB.get('suppliers');
-                let count = 0;
-
-                rows.forEach(row => {
-                    if (row.length >= 2 && row[0] && row[1]) {
-                        suppliers.push({
-                            id: Date.now() + count,
-                            code: row[0].trim(),
-                            name: row[1].trim(),
-                            shortName: row[2]?.trim() || '',
-                            contact: row[3]?.trim() || '',
-                            phone: row[4]?.trim() || '',
-                            email: row[5]?.trim() || '',
-                            address: row[6]?.trim() || '',
-                            bank: row[7]?.trim() || '',
-                            bankAccount: row[8]?.trim() || '',
-                            taxNo: row[9]?.trim() || '',
-                            status: 'active',
-                            creditLevel: row[10]?.trim() || 'B',
-                            products: row[11]?.trim() || '',
-                            remark: row[12]?.trim() || '',
-                            createTime: new Date().toISOString()
-                        });
-                        count++;
-                    }
-                });
-
-                DB.set('suppliers', suppliers);
-                showToast(`导入成功${count}条`, 'success');
-                renderSupplierList();
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        // 事件绑定
+        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化数据
             initData();
             initSupplierData();
 
-            // 登录
+            // 检查是否已登录
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('homePage').style.display = 'block';
+                document.getElementById('currentUser').textContent = currentUser.username;
+                document.getElementById('currentRole').textContent = {admin: '超级管理员', manager: '管理员', operator: '操作员'}[currentUser.role];
+                updateStats();
+            } else {
+                document.getElementById('loginPage').style.display = 'block';
+            }
+
+            // 登录按钮
             document.getElementById('loginBtn').addEventListener('click', function() {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 const role = document.getElementById('role').value;
 
+                if (!username || !password) {
+                    showToast('请输入用户名和密码', 'error');
+                    return;
+                }
+
                 const users = DB.get('users');
                 const user = users.find(u => u.username === username && u.password === password);
 
-                if (user || (username === 'hwq' && password === '568394')) {
-                    currentUser = user || { username: 'hwq', role: 'admin', name: '超级管理员' };
-                    document.getElementById('currentUser').textContent = currentUser.username;
-                    document.getElementById('currentRole').textContent = { admin: '超级管理员', manager: '管理员', operator: '操作员' }[currentUser.role];
-
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
                     document.getElementById('loginPage').style.display = 'none';
                     document.getElementById('homePage').style.display = 'block';
-
+                    document.getElementById('currentUser').textContent = user.username;
+                    document.getElementById('currentRole').textContent = {admin: '超级管理员', manager: '管理员', operator: '操作员'}[user.role];
+                    showToast('登录成功', 'success');
                     updateStats();
-                    initLocationSelect();
-                    initSupplierSelect();
                 } else {
-                    showToast('用户名或密码错误', 'error');
+                    // 硬编码超级管理员账户
+                    if (username === 'hwq' && password === '568394') {
+                        const userObj = { username: 'hwq', role: 'admin', name: '超级管理员' };
+                        currentUser = userObj;
+                        localStorage.setItem('currentUser', JSON.stringify(userObj));
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('homePage').style.display = 'block';
+                        document.getElementById('currentUser').textContent = 'hwq';
+                        document.getElementById('currentRole').textContent = '超级管理员';
+                        showToast('登录成功', 'success');
+                        updateStats();
+                    } else {
+                        showToast('用户名或密码错误', 'error');
+                    }
                 }
             });
 
-            // 退出
+            // 退出登录
             document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (!confirm('确定要退出登录吗？')) return;
+                localStorage.removeItem('currentUser');
                 currentUser = null;
                 document.getElementById('homePage').style.display = 'none';
-                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('loginPage').style.display = 'block';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
             });
 
             // 仓库切换
             document.getElementById('warehouseSelect').addEventListener('change', function() {
                 currentWarehouse = this.value;
-                initLocationSelect();
                 updateStats();
+            });
+
+            // 快速操作
+            document.getElementById('quickScan').addEventListener('click', function() {
+                showPage('stockInPage');
+            });
+
+            document.getElementById('quickOut').addEventListener('click', function() {
+                showPage('stockOutPage');
+            });
+
+            document.getElementById('quickTransfer').addEventListener('click', function() {
+                showPage('transferPage');
+            });
+
+            document.getElementById('quickPick').addEventListener('click', function() {
+                showPage('pickListPage');
+            });
+
+            // 功能模块
+            document.getElementById('moduleMaterial').addEventListener('click', function() {
+                showPage('materialListPage');
+            });
+
+            document.getElementById('moduleStock').addEventListener('click', function() {
+                showPage('stockListPage');
+            });
+
+            document.getElementById('moduleOrder').addEventListener('click', function() {
+                showPage('orderListPage');
+            });
+
+            document.getElementById('modulePick').addEventListener('click', function() {
+                showPage('pickListPage');
+            });
+
+            document.getElementById('moduleBarcode').addEventListener('click', function() {
+                showPage('barcodePage');
+            });
+
+            document.getElementById('moduleWarehouse').addEventListener('click', function() {
+                showPage('warehousePage');
+            });
+
+            document.getElementById('moduleLocation').addEventListener('click', function() {
+                showPage('locationPage');
+            });
+
+            document.getElementById('moduleUser').addEventListener('click', function() {
+                showPage('userPage');
+            });
+
+            document.getElementById('moduleReport').addEventListener('click', function() {
+                showPage('warningListPage');
+            });
+
+            document.getElementById('moduleSupplier').addEventListener('click', function() {
+                showPage('supplierListPage');
+            });
+
+            document.getElementById('moduleInventory').addEventListener('click', function() {
+                showPage('inventoryPage');
             });
 
             // 预警横幅点击
@@ -2558,255 +2240,43 @@
             });
 
             // 统计卡片点击
-            document.getElementById('statMaterial').addEventListener('click', () => showPage('materialListPage'));
-            document.getElementById('statStock').addEventListener('click', () => showPage('stockListPage'));
-            document.getElementById('statOrder').addEventListener('click', () => showPage('orderListPage'));
-            document.getElementById('statWarning').addEventListener('click', () => showPage('warningListPage'));
-
-            // 快捷操作
-            document.getElementById('quickScan').addEventListener('click', () => {
-                showPage('stockInPage');
-                document.getElementById('stockInCode').focus();
-            });
-            document.getElementById('quickOut').addEventListener('click', () => {
-                showPage('stockOutPage');
-                document.getElementById('stockOutCode').focus();
-            });
-            document.getElementById('quickTransfer').addEventListener('click', () => {
-                showPage('transferPage');
-                initLocationSelect();
-            });
-            document.getElementById('quickPick').addEventListener('click', () => showPage('pickListPage'));
-
-            // 功能模块
-            document.getElementById('moduleMaterial').addEventListener('click', () => showPage('materialListPage'));
-            document.getElementById('moduleStock').addEventListener('click', () => showPage('stockListPage'));
-            document.getElementById('moduleOrder').addEventListener('click', () => showPage('orderListPage'));
-            document.getElementById('modulePick').addEventListener('click', () => showPage('pickListPage'));
-            document.getElementById('moduleBarcode').addEventListener('click', () => showPage('barcodePage'));
-            document.getElementById('moduleWarehouse').addEventListener('click', () => showPage('warehousePage'));
-            document.getElementById('moduleLocation').addEventListener('click', () => showPage('locationPage'));
-            document.getElementById('moduleUser').addEventListener('click', () => showPage('userPage'));
-            document.getElementById('moduleReport').addEventListener('click', () => showToast('报表功能开发中'));
-            document.getElementById('moduleSupplier').addEventListener('click', () => {
-                currentPage = 1;
-                showPage('supplierListPage');
-                renderSupplierList();
-            });
-            document.getElementById('moduleInventory').addEventListener('click', () => {
-                showPage('inventoryPage');
-                renderInventoryList();
+            document.getElementById('statMaterial').addEventListener('click', function() {
+                showPage('materialListPage');
             });
 
-            // 新建盘点
-            document.getElementById('startInventoryBtn').addEventListener('click', function() {
-                createNewInventory();
+            document.getElementById('statStock').addEventListener('click', function() {
+                showPage('stockListPage');
             });
 
-            // 完成盘点
-            document.getElementById('completeInventoryBtn').addEventListener('click', function() {
-                completeCurrentInventory();
+            document.getElementById('statOrder').addEventListener('click', function() {
+                showPage('orderListPage');
             });
 
-            // 添加物料
+            document.getElementById('statWarning').addEventListener('click', function() {
+                showPage('warningListPage');
+            });
+
+            // 物料管理
             document.getElementById('addMaterialBtn').addEventListener('click', function() {
                 editingMaterial = null;
                 document.getElementById('materialFormTitle').textContent = '添加物料';
-                document.querySelectorAll('#materialFormPage input, #materialFormPage textarea').forEach(el => el.value = '');
-                document.getElementById('materialSafetyStock').value = 10;
-                document.getElementById('materialMaxStock').value = 1000;
+                document.getElementById('materialCode').value = '';
+                document.getElementById('materialName').value = '';
+                document.getElementById('materialSpec').value = '';
+                document.getElementById('materialUnit').value = '';
+                document.getElementById('materialPrice').value = '';
+                document.getElementById('materialCategory').value = '';
+                document.getElementById('materialSafetyStock').value = '10';
+                document.getElementById('materialMaxStock').value = '1000';
+                document.getElementById('materialBarcode').value = '';
+                document.getElementById('materialRemark').value = '';
                 document.getElementById('deleteMaterialBtn').style.display = 'none';
                 showPage('materialFormPage');
             });
 
-            // 批量删除物料
-            document.getElementById('batchDeleteMaterialBtn').addEventListener('click', function() {
-                const checkboxes = document.querySelectorAll('.material-checkbox:checked');
-                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-
-                if (ids.length === 0) {
-                    showToast('请选择要删除的物料', 'error');
-                    return;
-                }
-
-                if (confirm(`确定要删除选中的 ${ids.length} 个物料吗？`)) {
-                    const materials = DB.get('materials');
-                    const stocks = DB.get('stocks');
-
-                    // 删除物料
-                    const newMaterials = materials.filter(m => !ids.includes(m.id));
-                    DB.set('materials', newMaterials);
-
-                    // 删除相关库存记录
-                    const newStocks = stocks.filter(s => !ids.includes(s.materialId));
-                    DB.set('stocks', newStocks);
-
-                    showToast(`已删除 ${ids.length} 个物料`, 'success');
-                    renderMaterialList();
-                    updateStats();
-                }
-            });
-
-            // 添加仓库
-            document.getElementById('addWarehouseBtn').addEventListener('click', function() {
-                editingWarehouse = null;
-                document.getElementById('warehouseFormTitle').textContent = '添加仓库';
-                document.querySelectorAll('#warehouseFormPage input, #warehouseFormPage textarea').forEach(el => el.value = '');
-                document.getElementById('deleteWarehouseBtn').style.display = 'none';
-                showPage('warehouseFormPage');
-            });
-
-            // 批量删除仓库
-            document.getElementById('batchDeleteWarehouseBtn').addEventListener('click', function() {
-                const checkboxes = document.querySelectorAll('.warehouse-checkbox:checked');
-                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-
-                if (ids.length === 0) {
-                    showToast('请选择要删除的仓库', 'error');
-                    return;
-                }
-
-                if (confirm(`确定要删除选中的 ${ids.length} 个仓库吗？`)) {
-                    const warehouses = DB.get('warehouses');
-                    const stocks = DB.get('stocks');
-
-                    // 检查仓库是否有库存
-                    const hasStock = warehouses.filter(w => ids.includes(w.id)).some(w => {
-                        return stocks.filter(s => s.warehouse === w.code).length > 0;
-                    });
-
-                    if (hasStock) {
-                        if (!confirm('部分仓库有库存记录，删除后将清空这些库存，是否继续？')) {
-                            return;
-                        }
-                    }
-
-                    // 删除仓库
-                    const newWarehouses = warehouses.filter(w => !ids.includes(w.id));
-                    DB.set('warehouses', newWarehouses);
-
-                    // 删除相关库存记录
-                    const warehouseCodes = warehouses.filter(w => ids.includes(w.id)).map(w => w.code);
-                    const newStocks = stocks.filter(s => !warehouseCodes.includes(s.warehouse));
-                    DB.set('stocks', newStocks);
-
-                    showToast(`已删除 ${ids.length} 个仓库`, 'success');
-                    renderWarehouseList();
-                }
-            });
-
-            // 添加库位
-            document.getElementById('addLocationBtn').addEventListener('click', function() {
-                editingLocation = null;
-                document.getElementById('locationFormTitle').textContent = '添加库位';
-                document.querySelectorAll('#locationFormPage input, #locationFormPage select').forEach(el => el.value = '');
-                initLocationWarehouseSelect();
-                document.getElementById('deleteLocationBtn').style.display = 'none';
-                showPage('locationFormPage');
-            });
-
-            // 批量删除库位
-            document.getElementById('batchDeleteLocationBtn').addEventListener('click', function() {
-                const checkboxes = document.querySelectorAll('.location-checkbox:checked');
-                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-
-                if (ids.length === 0) {
-                    showToast('请选择要删除的库位', 'error');
-                    return;
-                }
-
-                if (confirm(`确定要删除选中的 ${ids.length} 个库位吗？`)) {
-                    const locations = DB.get('locations');
-                    const stocks = DB.get('stocks');
-
-                    // 检查库位是否有库存
-                    const hasStock = locations.filter(l => ids.includes(l.id)).some(l => {
-                        return stocks.filter(s => s.location === l.code).length > 0;
-                    });
-
-                    if (hasStock) {
-                        if (!confirm('部分库位有库存记录，删除后将清空这些库存，是否继续？')) {
-                            return;
-                        }
-                    }
-
-                    // 删除库位
-                    const newLocations = locations.filter(l => !ids.includes(l.id));
-                    DB.set('locations', newLocations);
-
-                    // 删除相关库存记录
-                    const newStocks = stocks.filter(s => {
-                        const locationCodes = locations.filter(l => ids.includes(l.id)).map(l => l.code);
-                        return !locationCodes.includes(s.location);
-                    });
-                    DB.set('stocks', newStocks);
-
-                    showToast(`已删除 ${ids.length} 个库位`, 'success');
-                    renderLocationList();
-                }
-            });
-
-            // 添加用户
-            document.getElementById('addUserBtn').addEventListener('click', function() {
-                editingUser = null;
-                document.getElementById('userFormTitle').textContent = '添加用户';
-                document.querySelectorAll('#userFormPage input, #userFormPage select').forEach(el => el.value = '');
-                document.getElementById('deleteUserBtn').style.display = 'none';
-                showPage('userFormPage');
-            });
-
-            // 批量删除用户
-            document.getElementById('batchDeleteUserBtn').addEventListener('click', function() {
-                const checkboxes = document.querySelectorAll('.user-checkbox:checked');
-                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-
-                if (ids.length === 0) {
-                    showToast('请选择要删除的用户', 'error');
-                    return;
-                }
-
-                if (confirm(`确定要删除选中的 ${ids.length} 个用户吗？`)) {
-                    const users = DB.get('users');
-                    const newUsers = users.filter(u => !ids.includes(u.id));
-                    DB.set('users', newUsers);
-
-                    showToast(`已删除 ${ids.length} 个用户`, 'success');
-                    renderUserList();
-                }
-            });
-
-            // 超级管理员一键清空所有数据
-            document.getElementById('deleteAllDataBtn').addEventListener('click', function() {
-                if (currentUser?.role !== 'admin') {
-                    showToast('只有超级管理员才能执行此操作', 'error');
-                    return;
-                }
-
-                if (!confirm('⚠️ 确定要清空所有数据吗？此操作不可恢复！')) {
-                    return;
-                }
-
-                if (!confirm('⚠️ 再次确认：这将删除所有物料、库存、订单、供应商、仓库、库位数据！')) {
-                    return;
-                }
-
-                // 清空所有数据，仅保留用户
-                DB.set('materials', []);
-                DB.set('stocks', []);
-                DB.set('orders', []);
-                DB.set('suppliers', []);
-                DB.set('warehouses', []);
-                DB.set('locations', []);
-                DB.set('inventories', []);
-
-                showToast('所有数据已清空', 'success');
-                updateStats();
-            });
-
-            // 保存物料
             document.getElementById('saveMaterialBtn').addEventListener('click', function() {
-                const code = document.getElementById('materialCode').value.trim();
-                const name = document.getElementById('materialName').value.trim();
+                const code = document.getElementById('materialCode').value;
+                const name = document.getElementById('materialName').value;
 
                 if (!code || !name) {
                     showToast('请填写物料编码和名称', 'error');
@@ -2816,296 +2286,120 @@
                 const materials = DB.get('materials');
 
                 if (editingMaterial) {
+                    // 编辑
                     const index = materials.findIndex(m => m.id === editingMaterial.id);
                     materials[index] = {
-                        ...editingMaterial,
-                        code,
-                        name,
+                        ...materials[index],
+                        code: code,
+                        name: name,
                         spec: document.getElementById('materialSpec').value,
                         unit: document.getElementById('materialUnit').value,
                         price: document.getElementById('materialPrice').value,
                         category: document.getElementById('materialCategory').value,
                         safetyStock: parseInt(document.getElementById('materialSafetyStock').value) || 10,
                         maxStock: parseInt(document.getElementById('materialMaxStock').value) || 1000,
-                        barcode: document.getElementById('materialBarcode').value || `BC${String(editingMaterial.id).padStart(8, '0')}`,
+                        barcode: document.getElementById('materialBarcode').value || `BC${code}`,
                         remark: document.getElementById('materialRemark').value
                     };
+                    showToast('保存成功', 'success');
                 } else {
+                    // 新增
                     const newMaterial = {
                         id: Date.now(),
-                        code,
-                        name,
+                        code: code,
+                        name: name,
                         spec: document.getElementById('materialSpec').value,
                         unit: document.getElementById('materialUnit').value,
                         price: document.getElementById('materialPrice').value,
                         category: document.getElementById('materialCategory').value,
                         safetyStock: parseInt(document.getElementById('materialSafetyStock').value) || 10,
                         maxStock: parseInt(document.getElementById('materialMaxStock').value) || 1000,
-                        barcode: document.getElementById('materialBarcode').value || `BC${String(Date.now()).slice(-8)}`,
-                        remark: document.getElementById('materialRemark').value,
+                        barcode: document.getElementById('materialBarcode').value || `BC${code}`,
                         warehouse: currentWarehouse,
-                        createTime: new Date().toISOString()
+                        createTime: new Date().toISOString(),
+                        remark: document.getElementById('materialRemark').value
                     };
                     materials.push(newMaterial);
+                    showToast('添加成功', 'success');
                 }
 
                 DB.set('materials', materials);
-                showToast('保存成功', 'success');
                 showPage('materialListPage');
                 updateStats();
             });
 
-            // 删除物料
             document.getElementById('deleteMaterialBtn').addEventListener('click', function() {
                 if (!editingMaterial) return;
+                if (!confirm('确定要删除这个物料吗？')) return;
 
-                if (confirm('确定要删除这个物料吗？')) {
-                    const materials = DB.get('materials');
-                    const index = materials.findIndex(m => m.id === editingMaterial.id);
-                    materials.splice(index, 1);
-                    DB.set('materials', materials);
-
-                    showToast('删除成功', 'success');
-                    showPage('materialListPage');
-                    updateStats();
-                }
-            });
-
-            // 保存仓库
-            document.getElementById('saveWarehouseBtn').addEventListener('click', function() {
-                const code = document.getElementById('warehouseCode').value.trim();
-                const name = document.getElementById('warehouseName').value.trim();
-
-                if (!code || !name) {
-                    showToast('请填写仓库编码和名称', 'error');
-                    return;
-                }
-
-                const warehouses = DB.get('warehouses');
-
-                if (editingWarehouse) {
-                    const index = warehouses.findIndex(w => w.id === editingWarehouse.id);
-                    warehouses[index] = {
-                        ...editingWarehouse,
-                        code,
-                        name,
-                        address: document.getElementById('warehouseAddress').value,
-                        manager: document.getElementById('warehouseManager').value,
-                        phone: document.getElementById('warehousePhone').value,
-                        remark: document.getElementById('warehouseRemark').value
-                    };
-                } else {
-                    warehouses.push({
-                        id: Date.now(),
-                        code,
-                        name,
-                        address: document.getElementById('warehouseAddress').value,
-                        manager: document.getElementById('warehouseManager').value,
-                        phone: document.getElementById('warehousePhone').value,
-                        remark: document.getElementById('warehouseRemark').value
-                    });
-                }
-
-                DB.set('warehouses', warehouses);
-                showToast('保存成功', 'success');
-                showPage('warehousePage');
-                renderWarehouseList();
-            });
-
-            // 删除仓库
-            document.getElementById('deleteWarehouseBtn').addEventListener('click', function() {
-                if (!editingWarehouse) return;
-
-                if (confirm('确定要删除这个仓库吗？')) {
-                    const warehouses = DB.get('warehouses');
-                    const index = warehouses.findIndex(w => w.id === editingWarehouse.id);
-                    warehouses.splice(index, 1);
-                    DB.set('warehouses', warehouses);
-
-                    showToast('删除成功', 'success');
-                    showPage('warehousePage');
-                    renderWarehouseList();
-                }
-            });
-
-            // 保存库位
-            document.getElementById('saveLocationBtn').addEventListener('click', function() {
-                const code = document.getElementById('locationCode').value.trim();
-                const name = document.getElementById('locationName').value.trim();
-
-                if (!code || !name) {
-                    showToast('请填写库位编码和名称', 'error');
-                    return;
-                }
-
-                if (code.length < 4 || code.length > 10) {
-                    showToast('库位编码长度无效', 'error');
-                    return;
-                }
-
-                const locations = DB.get('locations');
-
-                if (editingLocation) {
-                    const index = locations.findIndex(l => l.id === editingLocation.id);
-                    locations[index] = {
-                        ...editingLocation,
-                        code,
-                        name,
-                        warehouse: document.getElementById('locationWarehouse').value,
-                        remark: document.getElementById('locationRemark').value
-                    };
-                } else {
-                    locations.push({
-                        id: Date.now(),
-                        code,
-                        name,
-                        warehouse: document.getElementById('locationWarehouse').value,
-                        remark: document.getElementById('locationRemark').value
-                    });
-                }
-
-                DB.set('locations', locations);
-                showToast('保存成功', 'success');
-                showPage('locationPage');
-                renderLocationList();
-            });
-
-            // 删除库位
-            document.getElementById('deleteLocationBtn').addEventListener('click', function() {
-                if (!editingLocation) return;
-
-                if (confirm('确定要删除这个库位吗？')) {
-                    const locations = DB.get('locations');
-                    const index = locations.findIndex(l => l.id === editingLocation.id);
-                    locations.splice(index, 1);
-                    DB.set('locations', locations);
-
-                    showToast('删除成功', 'success');
-                    showPage('locationPage');
-                    renderLocationList();
-                }
-            });
-
-            // 保存用户
-            document.getElementById('saveUserBtn').addEventListener('click', function() {
-                const username = document.getElementById('userUsername').value.trim();
-                const password = document.getElementById('userPassword').value.trim();
-
-                if (!username || !password) {
-                    showToast('请填写用户名和密码', 'error');
-                    return;
-                }
-
-                const users = DB.get('users');
-
-                if (editingUser) {
-                    const index = users.findIndex(u => u.id === editingUser.id);
-                    users[index] = {
-                        ...editingUser,
-                        username,
-                        password,
-                        name: document.getElementById('userName').value,
-                        role: document.getElementById('userRole').value,
-                        remark: document.getElementById('userRemark').value
-                    };
-                } else {
-                    users.push({
-                        id: Date.now(),
-                        username,
-                        password,
-                        name: document.getElementById('userName').value,
-                        role: document.getElementById('userRole').value,
-                        remark: document.getElementById('userRemark').value
-                    });
-                }
-
-                DB.set('users', users);
-                showToast('保存成功', 'success');
-                showPage('userPage');
-                renderUserList();
-            });
-
-            // 删除用户
-            document.getElementById('deleteUserBtn').addEventListener('click', function() {
-                if (!editingUser) return;
-
-                if (confirm('确定要删除这个用户吗？')) {
-                    const users = DB.get('users');
-                    const index = users.findIndex(u => u.id === editingUser.id);
-                    users.splice(index, 1);
-                    DB.set('users', users);
-
-                    showToast('删除成功', 'success');
-                    showPage('userPage');
-                    renderUserList();
-                }
-            });
-
-            // 入库按钮
-            document.getElementById('stockInBtn').addEventListener('click', () => showPage('stockInPage'));
-
-            // 手动出库按钮
-            document.getElementById('manualOutBtn').addEventListener('click', () => showPage('stockOutPage'));
-
-            // 入库物料编码输入
-            document.getElementById('stockInCode').addEventListener('blur', function() {
-                const code = this.value.trim();
                 const materials = DB.get('materials');
-                const material = materials.find(m => m.code === code || m.barcode === code);
+                const stocks = DB.get('stocks');
 
+                const newMaterials = materials.filter(m => m.id !== editingMaterial.id);
+                DB.set('materials', newMaterials);
+
+                const newStocks = stocks.filter(s => s.materialId !== editingMaterial.id);
+                DB.set('stocks', newStocks);
+
+                showToast('删除成功', 'success');
+                showPage('materialListPage');
+                updateStats();
+            });
+
+            // 物料搜索和筛选
+            document.getElementById('materialSearch').addEventListener('input', renderMaterialList);
+            document.querySelectorAll('#materialFilter .filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#materialFilter .filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    renderMaterialList();
+                });
+            });
+
+            // 库存管理
+            document.getElementById('stockInBtn').addEventListener('click', function() {
+                document.getElementById('stockInCode').value = '';
+                document.getElementById('stockInName').value = '';
+                document.getElementById('stockInQty').value = '';
+                document.getElementById('stockInBatch').value = '';
+                document.getElementById('stockInRemark').value = '';
+                showPage('stockInPage');
+            });
+
+            // 入库操作
+            document.getElementById('stockInCode').addEventListener('change', function() {
+                const code = this.value;
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code);
                 if (material) {
                     document.getElementById('stockInName').value = material.name;
                 }
             });
 
-            // 出库物料编码输入
-            document.getElementById('stockOutCode').addEventListener('blur', function() {
-                const code = this.value.trim();
-                const materials = DB.get('materials');
-                const material = materials.find(m => m.code === code || m.barcode === code);
-
-                if (material) {
-                    document.getElementById('stockOutName').value = material.name;
-                    const stocks = DB.get('stocks');
-                    const total = stocks.filter(s => s.materialId === material.id).reduce((sum, s) => sum + s.quantity, 0);
-                    document.getElementById('stockOutCurrent').value = formatNumber(total);
-                }
-            });
-
-            // 转移物料编码输入
-            document.getElementById('transferMaterialCode').addEventListener('blur', function() {
-                const code = this.value.trim();
-                const materials = DB.get('materials');
-                const material = materials.find(m => m.code === code || m.barcode === code);
-
-                if (material) {
-                    document.getElementById('transferMaterialName').value = material.name;
-                }
-            });
-
-            // 确认入库
             document.getElementById('confirmStockInBtn').addEventListener('click', function() {
-                const code = document.getElementById('stockInCode').value.trim();
+                const code = document.getElementById('stockInCode').value;
                 const qty = parseInt(document.getElementById('stockInQty').value);
+                const location = document.getElementById('stockInLocation').value;
+                const type = document.getElementById('stockInType').value;
+                const supplier = document.getElementById('stockInSupplier').value;
+                const batch = document.getElementById('stockInBatch').value || `B${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
+                const remark = document.getElementById('stockInRemark').value;
 
-                if (!code || !qty) {
-                    showToast('请填写完整信息', 'error');
+                if (!code || !qty || !location) {
+                    showToast('请填写物料编码、数量和库位', 'error');
                     return;
                 }
 
                 const materials = DB.get('materials');
-                let material = materials.find(m => m.code === code || m.barcode === code);
+                const material = materials.find(m => m.code === code);
 
                 if (!material) {
-                    showToast('物料不存在', 'error');
+                    showToast('物料编码不存在', 'error');
                     return;
                 }
 
                 const stocks = DB.get('stocks');
-                const location = document.getElementById('stockInLocation').value || 'A-1';
-                const batch = document.getElementById('stockInBatch').value || `B${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
-
-                const existingStock = stocks.find(s => s.materialId === material.id && s.location === location && s.batch === batch);
+                const existingStock = stocks.find(s => s.materialCode === code && s.location === location && s.batch === batch);
 
                 if (existingStock) {
                     existingStock.quantity += qty;
@@ -3113,66 +2407,99 @@
                     stocks.push({
                         id: Date.now(),
                         materialId: material.id,
-                        materialCode: material.code,
+                        materialCode: code,
                         materialName: material.name,
                         quantity: qty,
-                        location,
+                        location: location,
                         warehouse: currentWarehouse,
-                        batch,
-                        inTime: new Date().toISOString()
+                        batch: batch,
+                        supplier: supplier,
+                        type: type,
+                        inTime: new Date().toISOString(),
+                        remark: remark
                     });
                 }
 
                 DB.set('stocks', stocks);
-                showToast(`入库成功: ${material.name} x ${qty}`, 'success');
+                showToast('入库成功', 'success');
                 showPage('stockListPage');
                 updateStats();
             });
 
-            // 确认出库
+            // 出库操作
+            document.getElementById('stockOutCode').addEventListener('change', function() {
+                const code = this.value;
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code);
+
+                if (material) {
+                    document.getElementById('stockOutName').value = material.name;
+                    const stocks = DB.get('stocks');
+                    const totalStock = stocks.filter(s => s.materialCode === code).reduce((sum, s) => sum + s.quantity, 0);
+                    document.getElementById('stockOutCurrent').value = totalStock;
+                }
+            });
+
             document.getElementById('confirmStockOutBtn').addEventListener('click', function() {
-                const code = document.getElementById('stockOutCode').value.trim();
+                const code = document.getElementById('stockOutCode').value;
                 const qty = parseInt(document.getElementById('stockOutQty').value);
+                const location = document.getElementById('stockOutLocation').value;
+                const type = document.getElementById('stockOutType').value;
+                const remark = document.getElementById('stockOutRemark').value;
 
                 if (!code || !qty) {
-                    showToast('请填写完整信息', 'error');
-                    return;
-                }
-
-                const materials = DB.get('materials');
-                const material = materials.find(m => m.code === code || m.barcode === code);
-
-                if (!material) {
-                    showToast('物料不存在', 'error');
+                    showToast('请填写物料编码和数量', 'error');
                     return;
                 }
 
                 const stocks = DB.get('stocks');
-                const stock = stocks.find(s => s.materialId === material.id);
+                let remainingQty = qty;
 
-                if (!stock || stock.quantity < qty) {
-                    showToast('库存不足', 'error');
-                    return;
+                // 优先从指定库位出库
+                if (location) {
+                    const locationStocks = stocks.filter(s => s.materialCode === code && s.location === location);
+                    for (const stock of locationStocks) {
+                        if (remainingQty <= 0) break;
+                        const reduceQty = Math.min(stock.quantity, remainingQty);
+                        stock.quantity -= reduceQty;
+                        remainingQty -= reduceQty;
+                    }
+                } else {
+                    // 从所有库位出库
+                    const allStocks = stocks.filter(s => s.materialCode === code).sort((a, b) => new Date(a.inTime) - new Date(b.inTime));
+                    for (const stock of allStocks) {
+                        if (remainingQty <= 0) break;
+                        const reduceQty = Math.min(stock.quantity, remainingQty);
+                        stock.quantity -= reduceQty;
+                        remainingQty -= reduceQty;
+                    }
                 }
 
-                stock.quantity -= qty;
-                if (stock.quantity === 0) {
-                    const index = stocks.indexOf(stock);
-                    stocks.splice(index, 1);
-                }
+                // 清理库存为0的记录
+                const newStocks = stocks.filter(s => s.quantity > 0);
+                DB.set('stocks', newStocks);
 
-                DB.set('stocks', stocks);
-                showToast(`出库成功: ${material.name} x ${qty}`, 'success');
+                showToast('出库成功', 'success');
                 showPage('stockListPage');
                 updateStats();
             });
 
-            // 确认转移
+            // 库位转移
+            document.getElementById('transferMaterialCode').addEventListener('change', function() {
+                const code = this.value;
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code);
+                if (material) {
+                    document.getElementById('transferMaterialName').value = material.name;
+                }
+            });
+
             document.getElementById('confirmTransferBtn').addEventListener('click', function() {
-                const code = document.getElementById('transferMaterialCode').value.trim();
+                const code = document.getElementById('transferMaterialCode').value;
                 const fromLocation = document.getElementById('transferFromLocation').value;
                 const toLocation = document.getElementById('transferToLocation').value;
                 const qty = parseInt(document.getElementById('transferQty').value);
+                const remark = document.getElementById('transferRemark').value;
 
                 if (!code || !fromLocation || !toLocation || !qty) {
                     showToast('请填写完整信息', 'error');
@@ -3180,48 +2507,40 @@
                 }
 
                 if (fromLocation === toLocation) {
-                    showToast('原库位和目标库位不能相同', 'error');
-                    return;
-                }
-
-                const materials = DB.get('materials');
-                const material = materials.find(m => m.code === code || m.barcode === code);
-
-                if (!material) {
-                    showToast('物料不存在', 'error');
+                    showToast('源库位和目标库位不能相同', 'error');
                     return;
                 }
 
                 const stocks = DB.get('stocks');
-                const fromStock = stocks.find(s => s.materialId === material.id && s.location === fromLocation);
+                const fromStock = stocks.find(s => s.materialCode === code && s.location === fromLocation);
 
                 if (!fromStock || fromStock.quantity < qty) {
-                    showToast('原库位库存不足', 'error');
+                    showToast('源库位库存不足', 'error');
                     return;
                 }
 
+                // 减少源库位库存
                 fromStock.quantity -= qty;
 
-                const toStock = stocks.find(s => s.materialId === material.id && s.location === toLocation);
+                // 增加目标库位库存
+                const toStock = stocks.find(s => s.materialCode === code && s.location === toLocation);
                 if (toStock) {
                     toStock.quantity += qty;
                 } else {
+                    const materials = DB.get('materials');
+                    const material = materials.find(m => m.code === code);
                     stocks.push({
                         id: Date.now(),
                         materialId: material.id,
-                        materialCode: material.code,
+                        materialCode: code,
                         materialName: material.name,
                         quantity: qty,
                         location: toLocation,
                         warehouse: currentWarehouse,
                         batch: fromStock.batch,
-                        inTime: new Date().toISOString()
+                        inTime: new Date().toISOString(),
+                        remark: remark
                     });
-                }
-
-                if (fromStock.quantity === 0) {
-                    const index = stocks.indexOf(fromStock);
-                    stocks.splice(index, 1);
                 }
 
                 DB.set('stocks', stocks);
@@ -3230,23 +2549,37 @@
                 updateStats();
             });
 
-            // 添加订单
+            // 库存搜索和筛选
+            document.getElementById('stockSearch').addEventListener('input', renderStockList);
+            document.querySelectorAll('#stockFilter .filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#stockFilter .filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    renderStockList();
+                });
+            });
+
+            // 订单管理
             document.getElementById('addOrderBtn').addEventListener('click', function() {
                 editingOrder = null;
                 document.getElementById('orderFormTitle').textContent = '新建订单';
-                document.querySelectorAll('#orderFormPage input, #orderFormPage textarea').forEach(el => el.value = '');
+                document.getElementById('orderNo').value = '';
+                document.getElementById('orderCustomer').value = '';
                 document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('orderRemark').value = '';
                 document.getElementById('orderItems').innerHTML = '';
                 document.getElementById('deleteOrderBtn').style.display = 'none';
                 showPage('orderFormPage');
             });
 
-            // 添加订单明细
             document.getElementById('addOrderItemBtn').addEventListener('click', function() {
+                const materials = DB.get('materials');
+                const options = materials.map(m => `<option value="${m.code}">${m.code} - ${m.name}</option>`).join('');
+
                 showModal('添加物料', `
                     <div class="form-group">
-                        <label>物料编码</label>
-                        <input type="text" id="orderItemCode" placeholder="请输入物料编码">
+                        <label>物料</label>
+                        <select id="orderItemMaterial">${options}</select>
                     </div>
                     <div class="form-group">
                         <label>数量</label>
@@ -3256,12 +2589,73 @@
                 `);
             });
 
-            // 保存订单
+            // 添加订单物料
+            window.addOrderItem = function() {
+                const code = document.getElementById('orderItemMaterial').value;
+                const qty = parseInt(document.getElementById('orderItemQty').value);
+                const materials = DB.get('materials');
+                const material = materials.find(m => m.code === code);
+
+                if (!code || !qty) return;
+
+                const container = document.getElementById('orderItems');
+                const items = container.querySelectorAll('.list-item');
+                const newItem = {
+                    materialId: material.id,
+                    materialCode: code,
+                    materialName: material.name,
+                    quantity: qty,
+                    pickedQty: 0
+                };
+
+                const existingItems = [];
+                items.forEach(item => {
+                    const codeSpan = item.querySelector('.list-item-label');
+                    if (codeSpan && codeSpan.textContent === '物料') {
+                        const valueSpan = item.querySelector('.list-item-value');
+                        const match = valueSpan.textContent.match(/^(.+?)\s/);
+                        if (match) {
+                            existingItems.push(match[1]);
+                        }
+                    }
+                });
+
+                if (existingItems.includes(code)) {
+                    showToast('物料已添加', 'error');
+                    return;
+                }
+
+                container.innerHTML += `
+                    <div class="list-item" style="margin-bottom:10px;">
+                        <div class="list-item-row">
+                            <span class="list-item-label">物料</span>
+                            <span class="list-item-value">${code} ${material.name}</span>
+                        </div>
+                        <div class="list-item-row">
+                            <span class="list-item-label">数量</span>
+                            <span class="list-item-value">${qty}</span>
+                        </div>
+                    </div>
+                `;
+
+                // 保存到全局变量
+                if (!window.orderItems) window.orderItems = [];
+                window.orderItems.push(newItem);
+
+                closeModal();
+            };
+
             document.getElementById('saveOrderBtn').addEventListener('click', function() {
-                const customer = document.getElementById('orderCustomer').value.trim();
+                const customer = document.getElementById('orderCustomer').value;
+                const items = window.orderItems || [];
 
                 if (!customer) {
                     showToast('请填写客户名称', 'error');
+                    return;
+                }
+
+                if (items.length === 0) {
+                    showToast('请添加物料', 'error');
                     return;
                 }
 
@@ -3270,114 +2664,104 @@
                 if (editingOrder) {
                     const index = orders.findIndex(o => o.id === editingOrder.id);
                     orders[index] = {
-                        ...editingOrder,
-                        customer,
+                        ...orders[index],
+                        customer: customer,
+                        items: items,
                         remark: document.getElementById('orderRemark').value
                     };
                 } else {
-                    const newOrder = {
+                    orders.push({
                         id: Date.now(),
-                        orderNo: document.getElementById('orderNo').value || `ORD${String(Date.now()).slice(-6)}`,
-                        customer,
-                        items: [],
+                        orderNo: document.getElementById('orderNo').value || `ORD${String(orders.length + 1).padStart(6, '0')}`,
+                        customer: customer,
+                        items: items,
                         status: 'pending',
                         createTime: new Date().toISOString(),
                         warehouse: currentWarehouse,
                         remark: document.getElementById('orderRemark').value
-                    };
-                    orders.push(newOrder);
+                    });
                 }
 
                 DB.set('orders', orders);
+                window.orderItems = [];
                 showToast('保存成功', 'success');
                 showPage('orderListPage');
                 updateStats();
             });
 
-            // 完成拣货
-            document.getElementById('completePickBtn').addEventListener('click', function() {
-                if (!currentPickOrder) return;
+            document.getElementById('deleteOrderBtn').addEventListener('click', function() {
+                if (!editingOrder) return;
+                if (!confirm('确定要删除这个订单吗？')) return;
 
                 const orders = DB.get('orders');
-                const index = orders.findIndex(o => o.id === currentPickOrder.id);
-                orders[index].status = 'completed';
-                DB.set('orders', orders);
+                const newOrders = orders.filter(o => o.id !== editingOrder.id);
+                DB.set('orders', newOrders);
 
-                showToast('拣货完成', 'success');
-                showPage('pickListPage');
+                showToast('删除成功', 'success');
+                showPage('orderListPage');
                 updateStats();
             });
 
-            // 模态框关闭
-            document.getElementById('modalClose').addEventListener('click', closeModal);
-            document.getElementById('modal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
-            });
-
-            // 搜索和筛选
-            document.getElementById('materialSearch').addEventListener('input', () => { currentPage = 1; renderMaterialList(); });
-            document.getElementById('stockSearch').addEventListener('input', () => { currentPage = 1; renderStockList(); });
-            document.getElementById('orderSearch').addEventListener('input', () => { currentPage = 1; renderOrderList(); });
-            document.getElementById('barcodeSearch').addEventListener('input', renderBarcodeList);
-            document.getElementById('supplierSearch').addEventListener('input', () => { currentPage = 1; renderSupplierList(); });
-
-            // 库位搜索
-            document.getElementById('stockInLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockInLocationSearch', 'stockInLocation'));
-            document.getElementById('stockOutLocationSearch')?.addEventListener('input', () => filterLocationSelect('stockOutLocationSearch', 'stockOutLocation'));
-            document.getElementById('transferFromLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferFromLocationSearch', 'transferFromLocation'));
-            document.getElementById('transferToLocationSearch')?.addEventListener('input', () => filterLocationSelect('transferToLocationSearch', 'transferToLocation'));
-
-            // 筛选标签
-            document.querySelectorAll('.filter-tabs').forEach(tabs => {
-                tabs.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('filter-tab')) {
-                        this.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-                        e.target.classList.add('active');
-                        currentPage = 1;
-                        // 根据当前页面触发对应的渲染函数
-                        if (document.getElementById('supplierListPage').style.display === 'block') {
-                            renderSupplierList();
-                        } else if (document.getElementById('materialListPage').style.display === 'block') {
-                            renderMaterialList();
-                        } else if (document.getElementById('stockListPage').style.display === 'block') {
-                            renderStockList();
-                        } else if (document.getElementById('orderListPage').style.display === 'block') {
-                            renderOrderList();
-                        }
-                    }
+            // 订单搜索和筛选
+            document.getElementById('orderSearch').addEventListener('input', renderOrderList);
+            document.querySelectorAll('#orderFilter .filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#orderFilter .filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    renderOrderList();
                 });
             });
 
-            // 添加供应商
+            // 拣货筛选
+            document.querySelectorAll('#pickFilter .filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#pickFilter .filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    renderPickList();
+                });
+            });
+
+            // 条形码搜索
+            document.getElementById('barcodeSearch').addEventListener('input', renderBarcodeList);
+
+            // 供应商管理
             document.getElementById('addSupplierBtn').addEventListener('click', function() {
-                window.editingSupplier = null;
                 document.getElementById('supplierFormTitle').textContent = '添加供应商';
                 document.getElementById('supplierCode').value = generateSupplierCode();
-                document.querySelectorAll('#supplierFormPage input, #supplierFormPage textarea').forEach(el => {
-                    if (el.id !== 'supplierCode') el.value = '';
-                });
+                document.getElementById('supplierName').value = '';
+                document.getElementById('supplierShortName').value = '';
+                document.getElementById('supplierContact').value = '';
+                document.getElementById('supplierPhone').value = '';
+                document.getElementById('supplierEmail').value = '';
+                document.getElementById('supplierAddress').value = '';
+                document.getElementById('supplierBank').value = '';
+                document.getElementById('supplierBankAccount').value = '';
+                document.getElementById('supplierTaxNo').value = '';
                 document.getElementById('supplierStatus').value = 'active';
-                document.getElementById('supplierCreditLevel').value = 'B';
+                document.getElementById('supplierCreditLevel').value = 'A';
+                document.getElementById('supplierProducts').value = '';
+                document.getElementById('supplierRemark').value = '';
                 document.getElementById('deleteSupplierBtn').style.display = 'none';
                 showPage('supplierFormPage');
             });
 
-            // 保存供应商
             document.getElementById('saveSupplierBtn').addEventListener('click', function() {
-                const name = document.getElementById('supplierName').value.trim();
-
+                const name = document.getElementById('supplierName').value;
                 if (!name) {
                     showToast('请填写供应商名称', 'error');
                     return;
                 }
 
                 const suppliers = DB.get('suppliers');
+                const code = document.getElementById('supplierCode').value;
+                const existingSupplier = suppliers.find(s => s.code === code);
 
-                if (window.editingSupplier) {
-                    const index = suppliers.findIndex(s => s.id === window.editingSupplier.id);
+                if (existingSupplier) {
+                    // 编辑
+                    const index = suppliers.findIndex(s => s.code === code);
                     suppliers[index] = {
-                        ...window.editingSupplier,
-                        name,
+                        ...suppliers[index],
+                        name: name,
                         shortName: document.getElementById('supplierShortName').value,
                         contact: document.getElementById('supplierContact').value,
                         phone: document.getElementById('supplierPhone').value,
@@ -3392,10 +2776,11 @@
                         remark: document.getElementById('supplierRemark').value
                     };
                 } else {
-                    const newSupplier = {
+                    // 新增
+                    suppliers.push({
                         id: Date.now(),
-                        code: document.getElementById('supplierCode').value,
-                        name,
+                        code: code,
+                        name: name,
                         shortName: document.getElementById('supplierShortName').value,
                         contact: document.getElementById('supplierContact').value,
                         phone: document.getElementById('supplierPhone').value,
@@ -3409,68 +2794,269 @@
                         products: document.getElementById('supplierProducts').value,
                         remark: document.getElementById('supplierRemark').value,
                         createTime: new Date().toISOString()
-                    };
-                    suppliers.push(newSupplier);
+                    });
                 }
 
                 DB.set('suppliers', suppliers);
                 showToast('保存成功', 'success');
                 showPage('supplierListPage');
-                renderSupplierList();
             });
 
-            // 删除供应商
             document.getElementById('deleteSupplierBtn').addEventListener('click', function() {
-                if (!window.editingSupplier) return;
+                const code = document.getElementById('supplierCode').value;
+                if (!confirm('确定要删除这个供应商吗？')) return;
 
-                if (confirm('确定要删除这个供应商吗？')) {
-                    const suppliers = DB.get('suppliers');
-                    const index = suppliers.findIndex(s => s.id === window.editingSupplier.id);
-                    suppliers.splice(index, 1);
-                    DB.set('suppliers', suppliers);
+                const suppliers = DB.get('suppliers');
+                const newSuppliers = suppliers.filter(s => s.code !== code);
+                DB.set('suppliers', newSuppliers);
 
-                    showToast('删除成功', 'success');
-                    showPage('supplierListPage');
+                showToast('删除成功', 'success');
+                showPage('supplierListPage');
+            });
+
+            // 供应商搜索和筛选
+            document.getElementById('supplierSearch').addEventListener('input', renderSupplierList);
+            document.querySelectorAll('#supplierFilter .filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#supplierFilter .filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
                     renderSupplierList();
+                });
+            });
+
+            // 仓库管理
+            document.getElementById('addWarehouseBtn').addEventListener('click', function() {
+                editingWarehouse = null;
+                document.getElementById('warehouseFormTitle').textContent = '添加仓库';
+                document.getElementById('warehouseCode').value = '';
+                document.getElementById('warehouseName').value = '';
+                document.getElementById('warehouseAddress').value = '';
+                document.getElementById('warehouseManager').value = '';
+                document.getElementById('warehousePhone').value = '';
+                document.getElementById('warehouseRemark').value = '';
+                document.getElementById('deleteWarehouseBtn').style.display = 'none';
+                showPage('warehouseFormPage');
+            });
+
+            document.getElementById('saveWarehouseBtn').addEventListener('click', function() {
+                const code = document.getElementById('warehouseCode').value;
+                const name = document.getElementById('warehouseName').value;
+
+                if (!code || !name) {
+                    showToast('请填写仓库编码和名称', 'error');
+                    return;
                 }
+
+                const warehouses = DB.get('warehouses');
+
+                if (editingWarehouse) {
+                    const index = warehouses.findIndex(w => w.id === editingWarehouse.id);
+                    warehouses[index] = {
+                        ...warehouses[index],
+                        code: code,
+                        name: name,
+                        address: document.getElementById('warehouseAddress').value,
+                        manager: document.getElementById('warehouseManager').value,
+                        phone: document.getElementById('warehousePhone').value,
+                        remark: document.getElementById('warehouseRemark').value
+                    };
+                } else {
+                    warehouses.push({
+                        id: Date.now(),
+                        code: code,
+                        name: name,
+                        address: document.getElementById('warehouseAddress').value,
+                        manager: document.getElementById('warehouseManager').value,
+                        phone: document.getElementById('warehousePhone').value,
+                        remark: document.getElementById('warehouseRemark').value
+                    });
+                }
+
+                DB.set('warehouses', warehouses);
+                showToast('保存成功', 'success');
+                showPage('warehousePage');
+            });
+
+            document.getElementById('deleteWarehouseBtn').addEventListener('click', function() {
+                if (!editingWarehouse) return;
+                if (!confirm('确定要删除这个仓库吗？')) return;
+
+                const warehouses = DB.get('warehouses');
+                const newWarehouses = warehouses.filter(w => w.id !== editingWarehouse.id);
+                DB.set('warehouses', newWarehouses);
+
+                showToast('删除成功', 'success');
+                showPage('warehousePage');
+            });
+
+            // 库位管理
+            document.getElementById('addLocationBtn').addEventListener('click', function() {
+                editingLocation = null;
+                document.getElementById('locationFormTitle').textContent = '添加库位';
+                document.getElementById('locationCode').value = '';
+                document.getElementById('locationName').value = '';
+                document.getElementById('locationWarehouse').value = currentWarehouse;
+                document.getElementById('locationRemark').value = '';
+                document.getElementById('deleteLocationBtn').style.display = 'none';
+                showPage('locationFormPage');
+            });
+
+            document.getElementById('saveLocationBtn').addEventListener('click', function() {
+                const code = document.getElementById('locationCode').value;
+                const name = document.getElementById('locationName').value;
+
+                if (!code || !name) {
+                    showToast('请填写库位编码和名称', 'error');
+                    return;
+                }
+
+                const locations = DB.get('locations');
+
+                if (editingLocation) {
+                    const index = locations.findIndex(l => l.id === editingLocation.id);
+                    locations[index] = {
+                        ...locations[index],
+                        code: code,
+                        name: name,
+                        warehouse: document.getElementById('locationWarehouse').value,
+                        remark: document.getElementById('locationRemark').value
+                    };
+                } else {
+                    locations.push({
+                        id: Date.now(),
+                        code: code,
+                        name: name,
+                        warehouse: document.getElementById('locationWarehouse').value,
+                        remark: document.getElementById('locationRemark').value
+                    });
+                }
+
+                DB.set('locations', locations);
+                showToast('保存成功', 'success');
+                showPage('locationPage');
+            });
+
+            document.getElementById('deleteLocationBtn').addEventListener('click', function() {
+                if (!editingLocation) return;
+                if (!confirm('确定要删除这个库位吗？')) return;
+
+                const locations = DB.get('locations');
+                const location = locations.find(l => l.id === editingLocation.id);
+
+                const stocks = DB.get('stocks');
+                const hasStock = stocks.filter(s => s.location === location.code).length > 0;
+
+                if (hasStock) {
+                    if (!confirm('该库位有库存记录，删除后将清空这些库存，是否继续？')) {
+                        return;
+                    }
+                }
+
+                const newLocations = locations.filter(l => l.id !== editingLocation.id);
+                DB.set('locations', newLocations);
+
+                const newStocks = stocks.filter(s => s.location !== location.code);
+                DB.set('stocks', newStocks);
+
+                showToast('删除成功', 'success');
+                showPage('locationPage');
+            });
+
+            // 用户管理
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                editingUser = null;
+                document.getElementById('userFormTitle').textContent = '添加用户';
+                document.getElementById('userUsername').value = '';
+                document.getElementById('userName').value = '';
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userRole').value = 'operator';
+                document.getElementById('userRemark').value = '';
+                document.getElementById('deleteUserBtn').style.display = 'none';
+                showPage('userFormPage');
+            });
+
+            document.getElementById('saveUserBtn').addEventListener('click', function() {
+                const username = document.getElementById('userUsername').value;
+                const password = document.getElementById('userPassword').value;
+                const role = document.getElementById('userRole').value;
+
+                if (!username || !password) {
+                    showToast('请填写用户名和密码', 'error');
+                    return;
+                }
+
+                const users = DB.get('users');
+
+                if (editingUser) {
+                    const index = users.findIndex(u => u.id === editingUser.id);
+                    users[index] = {
+                        ...users[index],
+                        username: username,
+                        name: document.getElementById('userName').value,
+                        password: password,
+                        role: role,
+                        remark: document.getElementById('userRemark').value
+                    };
+                } else {
+                    // 检查用户名是否已存在
+                    if (users.find(u => u.username === username)) {
+                        showToast('用户名已存在', 'error');
+                        return;
+                    }
+
+                    users.push({
+                        id: Date.now(),
+                        username: username,
+                        name: document.getElementById('userName').value,
+                        password: password,
+                        role: role,
+                        remark: document.getElementById('userRemark').value
+                    });
+                }
+
+                DB.set('users', users);
+                showToast('保存成功', 'success');
+                showPage('userPage');
+                renderUserList();
+            });
+
+            document.getElementById('deleteUserBtn').addEventListener('click', function() {
+                if (!editingUser) return;
+                if (!confirm('确定要删除这个用户吗？')) return;
+
+                const users = DB.get('users');
+                const newUsers = users.filter(u => u.id !== editingUser.id);
+                DB.set('users', newUsers);
+
+                showToast('删除成功', 'success');
+                showPage('userPage');
+                renderUserList();
+            });
+
+            // 一键清空数据
+            document.getElementById('deleteAllDataBtn').addEventListener('click', function() {
+                if (!confirm('⚠️ 确定要清空所有数据吗？此操作不可恢复！\n\n将删除：\n- 所有物料\n- 所有库存\n- 所有订单\n- 所有供应商\n- 所有仓库和库位\n\n仅保留用户账户。')) return;
+
+                if (!confirm('请再次确认：清空所有数据？')) return;
+
+                localStorage.removeItem('materials');
+                localStorage.removeItem('stocks');
+                localStorage.removeItem('orders');
+                localStorage.removeItem('warehouses');
+                localStorage.removeItem('locations');
+                localStorage.removeItem('suppliers');
+                localStorage.removeItem('inventories');
+
+                showToast('数据已清空', 'success');
+                updateStats();
+            });
+
+            // 模态框关闭
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
             });
         });
-
-        // 添加订单明细
-        function addOrderItem() {
-            const code = document.getElementById('orderItemCode').value.trim();
-            const qty = parseInt(document.getElementById('orderItemQty').value);
-
-            if (!code || !qty) {
-                showToast('请填写完整信息', 'error');
-                return;
-            }
-
-            const materials = DB.get('materials');
-            const material = materials.find(m => m.code === code);
-
-            if (!material) {
-                showToast('物料不存在', 'error');
-                return;
-            }
-
-            if (!editingOrder) {
-                editingOrder = {
-                    items: []
-                };
-            }
-
-            editingOrder.items.push({
-                materialId: material.id,
-                materialCode: material.code,
-                materialName: material.name,
-                quantity: qty,
-                pickedQty: 0
-            });
-
-            renderOrderItems(editingOrder.items);
-            closeModal();
-        }
     </script>
 </body>
 </html>
