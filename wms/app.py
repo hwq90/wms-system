@@ -3,7 +3,7 @@
 部署到 Vercel
 """
 
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import os
 import sys
@@ -20,6 +20,9 @@ from report_center import get_dashboard_summary, get_inventory_report
 
 app = Flask(__name__)
 CORS(app)
+
+# 初始化数据库
+init_database()
 
 INDEX_HTML = '''
 <!DOCTYPE html>
@@ -140,5 +143,6 @@ def api_stock_out():
 def api_inventory():
     return jsonify(get_inventory_report())
 
-# Vercel 入口
-app.run('0.0.0.0', 5000)
+# Vercel 入口 - 只在本地开发时运行
+if __name__ == '__main__':
+    app.run(debug=True)
